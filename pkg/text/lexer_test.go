@@ -15,20 +15,6 @@ func TestLexer(t *testing.T) {
 		want []*text.Token
 	}{
 		{
-			name: "handles comment",
-			text: "# hello this is a comment\n",
-			want: []*text.Token{
-				{Type: text.TypeLineComment, Content: ""},
-				{Type: text.TypeWord, Content: "hello"},
-				{Type: text.TypeWord, Content: "this"},
-				{Type: text.TypeWord, Content: "is"},
-				{Type: text.TypeWord, Content: "a"},
-				{Type: text.TypeWord, Content: "comment"},
-				{Type: text.TypeEOL, Content: ""},
-				{Type: text.TypeEOF, Content: ""},
-			},
-		},
-		{
 			name: "handles test declaration",
 			text: `
 @test "this is a random test" {
@@ -45,13 +31,41 @@ func TestLexer(t *testing.T) {
 				{Type: text.TypeWord, Content: "random"},
 				{Type: text.TypeWord, Content: "test"},
 				{Type: text.TypeDoubleQuote, Content: ""},
-				{Type: text.TypeOpenBlock, Content: ""},
+				{Type: text.TypeOpenFunctionBody, Content: ""},
 				{Type: text.TypeWord, Content: "ls"},
 				{Type: text.TypeWord, Content: "/foo/bar"},
 				{Type: text.TypeEOL, Content: ""},
 				{Type: text.TypeWord, Content: "assert_ok"},
 				{Type: text.TypeEOL, Content: ""},
-				{Type: text.TypeCloseBlock, Content: ""},
+				{Type: text.TypeCloseFunctionBody, Content: ""},
+				{Type: text.TypeEOF, Content: ""},
+			},
+		},
+		{
+			name: "handles very commented test declaration",
+			text: `
+# Hello this is a comment
+@test "this is a random test" { # Hey I'm commenting here too
+	ls /foo/bar # ouh funny commenting here
+	assert_ok
+} # WHY COMMENTING HERE ?
+			`,
+			want: []*text.Token{
+				{Type: text.TypeTestDeclaration, Content: ""},
+				{Type: text.TypeDoubleQuote, Content: ""},
+				{Type: text.TypeWord, Content: "this"},
+				{Type: text.TypeWord, Content: "is"},
+				{Type: text.TypeWord, Content: "a"},
+				{Type: text.TypeWord, Content: "random"},
+				{Type: text.TypeWord, Content: "test"},
+				{Type: text.TypeDoubleQuote, Content: ""},
+				{Type: text.TypeOpenFunctionBody, Content: ""},
+				{Type: text.TypeWord, Content: "ls"},
+				{Type: text.TypeWord, Content: "/foo/bar"},
+				{Type: text.TypeEOL, Content: ""},
+				{Type: text.TypeWord, Content: "assert_ok"},
+				{Type: text.TypeEOL, Content: ""},
+				{Type: text.TypeCloseFunctionBody, Content: ""},
 				{Type: text.TypeEOF, Content: ""},
 			},
 		},
