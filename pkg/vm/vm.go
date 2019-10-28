@@ -19,5 +19,5 @@ type Runtime struct {
 
 // Instruction is an executable statement.
 type Instruction interface {
-	Exec(prev *Runtime) (*Runtime, error)
+	Exec(prev *Runtime) error
 }
