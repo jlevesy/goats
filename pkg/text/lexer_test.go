@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/jlevesy/batman/pkg/text"
+	"github.com/jlevesy/goats/pkg/text"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -1,8 +1,10 @@
-## Batman
+## Goats
+
+Bats + Go = Goats
 
 This project is a PoC of a script interpretor which allows mixing command instructions with instructions written in go and evaluated at runtime using [yaegi](https://github.com/containous/yaegi).
 
-The main use case behind this is to create a command line test framework heavilly inspired from [bats](https://github.com/bats-core/bats-core) but without any kind of bash knowledge required to use it.
+The main use case behind this is to create a command line test framework heavily inspired from [bats](https://github.com/bats-core/bats-core) but without any kind of bash knowledge required to use it.
 
 ## Current status
 
@@ -18,4 +20,4 @@ Right now it applies the following algorithm.
 
 With go modules enabled
 
-`go run cmd/main.go assets/test.batman`
+`go run cmd/main.go assets/test.goats`

@@ -1,4 +1,4 @@
-module github.com/jlevesy/batman
+module github.com/jlevesy/goats
 
 go 1.13
 
