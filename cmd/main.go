@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/jlevesy/batman/pkg/exec"
+	"github.com/jlevesy/goats/pkg/exec"
 )
 
 func main() {
