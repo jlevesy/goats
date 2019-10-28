@@ -14,7 +14,7 @@ const (
 	TypeUnknown TokenType = iota
 
 	TypeWord
-	TypeCommentLine
+	TypeLineComment
 	TypeTestDeclaration
 	TypeDoubleQuote
 
@@ -27,6 +27,31 @@ const (
 	TypeError
 )
 
+func (t TokenType) String() string {
+	switch t {
+	case TypeWord:
+		return "word"
+	case TypeLineComment:
+		return "line-comment"
+	case TypeTestDeclaration:
+		return "test-declaration"
+	case TypeDoubleQuote:
+		return "double-quote"
+	case TypeOpenBlock:
+		return "open-block"
+	case TypeCloseBlock:
+		return "close-block"
+	case TypeEOL:
+		return "eol"
+	case TypeEOF:
+		return "eof"
+	case TypeError:
+		return "error"
+	default:
+		return "unknown"
+	}
+}
+
 // Token represents a lexical token.
 type Token struct {
 	Type    TokenType
@@ -34,20 +59,30 @@ type Token struct {
 }
 
 const (
-	whitespace     = ' '
-	commentLine    = '#'
-	functionMarker = '@'
-	tab            = '\t'
-	eol            = '\n'
-	eof            = rune(0)
+	spaceRune               = ' '
+	tabRune                 = '\t'
+	eolRune                 = '\n'
+	commentLineRune         = '#'
+	functionDeclarationRune = '@'
+	doubleQuoteRune         = '"'
+	openBlockRune           = '{'
+	closeBlockRune          = '}'
+	escapeNextRune          = '\\'
 )
 
-type stateFunc func(l *Lexer) stateFunc
+// Useful runesets.
+var (
+	tabsAndSpaces = []rune{spaceRune, tabRune}
+	whitespaces   = append(tabsAndSpaces, eolRune)
+	endOfWord     = append(whitespaces, doubleQuoteRune, escapeNextRune)
+)
 
-// Lexer is a lexical scanner which returns lexical items based on given parsed text.
+type lexerState func(l *Lexer) lexerState
+
+// Lexer is a lexical scanner which produces a sequence of tokens describing the given content.
 type Lexer struct {
 	content *bufio.Reader
-	state   stateFunc
+	state   lexerState
 	tokenCh chan *Token
 }
 
@@ -55,7 +90,7 @@ type Lexer struct {
 func NewLexer(content io.Reader) *Lexer {
 	l := &Lexer{
 		content: bufio.NewReader(content),
-		state:   parseText,
+		state:   scanText,
 		tokenCh: make(chan *Token),
 	}
 
@@ -65,11 +100,11 @@ func NewLexer(content io.Reader) *Lexer {
 }
 
 func (l *Lexer) run() {
+	defer close(l.tokenCh)
+
 	for l.state != nil {
 		l.state = l.state(l)
 	}
-
-	close(l.tokenCh)
 }
 
 func (l *Lexer) Next() (*Token, bool) {
@@ -100,20 +135,20 @@ func (l *Lexer) readWord() (string, error) {
 			return "", err
 		}
 
-		if isWhitespace(r) {
+		if contains(endOfWord, r) {
 			return string(word), nil
 		}
 	}
 }
 
-func (l *Lexer) skipWhitespace() error {
+func (l *Lexer) skip(skippedSet []rune) error {
 	for {
 		r, err := l.peekRune()
 		if err != nil {
 			return err
 		}
 
-		if !isWhitespace(r) {
+		if !contains(skippedSet, r) {
 			return nil
 		}
 
@@ -136,7 +171,7 @@ func (l *Lexer) peekRune() (rune, error) {
 	return r, nil
 }
 
-func parseText(l *Lexer) stateFunc {
+func scanText(l *Lexer) lexerState {
 	for {
 		r, _, err := l.content.ReadRune()
 		// Standard termination.
@@ -145,20 +180,20 @@ func parseText(l *Lexer) stateFunc {
 			return nil
 		}
 		if err != nil {
-			l.errorf("unable to read rune %w", err)
+			l.errorf("unable to scan file: %w", err)
 			return nil
 		}
 
-		if isWhitespace(r) {
+		if contains(whitespaces, r) {
 			continue
 		}
 
 		switch r {
-		case commentLine:
-			l.emitToken(TypeCommentLine, string(r))
-			return parseComment
-		case functionMarker:
-			return parseFunction
+		case commentLineRune:
+			l.emitToken(TypeLineComment, "")
+			return scanComment
+		case functionDeclarationRune:
+			return scanFunctionDeclaration
 		default:
 			l.errorf("unexpected rune %q", r)
 			return nil
@@ -168,8 +203,8 @@ func parseText(l *Lexer) stateFunc {
 	return nil
 }
 
-func parseComment(l *Lexer) stateFunc {
-	if err := l.skipWhitespace(); err != nil {
+func scanComment(l *Lexer) lexerState {
+	if err := l.skip(whitespaces); err != nil {
 		l.errorf("unable to pase comment: %w", err)
 		return nil
 	}
@@ -177,7 +212,7 @@ func parseComment(l *Lexer) stateFunc {
 	for {
 		word, err := l.readWord()
 		if err != nil {
-			l.errorf("unable to parse comment: %w", err)
+			l.errorf("unable to scan comment: %w", err)
 			return nil
 		}
 
@@ -189,46 +224,193 @@ func parseComment(l *Lexer) stateFunc {
 			return nil
 		}
 		if err != nil {
-			l.errorf("unable to parse comment: %w", err)
+			l.errorf("unable to scan comment: %w", err)
 			return nil
 		}
 
-		if sep == eol {
+		if sep == eolRune {
 			l.emitToken(TypeEOL, "")
-			return parseText
+			return scanText
 		}
 	}
 }
 
-func parseFunction(l *Lexer) stateFunc {
+func scanFunctionDeclaration(l *Lexer) lexerState {
 	rawFuncType, err := l.readWord()
 	if err != nil {
-		l.errorf("unable to parse function: %w", err)
+		l.errorf("unable to scan function: %w", err)
 		return nil
 	}
 
-	funcType, err := parseFunctionType(rawFuncType)
+	funcType, err := functionType(rawFuncType)
 	if err != nil {
-		l.errorf("unable to parse function: %w", err)
+		l.errorf("unable to scan function: %w", err)
 		return nil
 	}
 
 	l.emitToken(funcType, "")
 
-	// TODO
+	if err = l.skip(whitespaces); err != nil {
+		l.errorf("unable to scan function declaration: %w", err)
+		return nil
+	}
 
-	return parseText
+	return scanFunctionName
 }
 
-func isWhitespace(ch rune) bool {
-	return ch == whitespace || ch == tab || ch == eol
+func scanFunctionName(l *Lexer) lexerState {
+	if err := l.skip(whitespaces); err != nil {
+		l.errorf("unable to scan function declaration: %w", err)
+		return nil
+	}
+
+	openQuote, _, err := l.content.ReadRune()
+	if err != nil {
+		l.errorf("unable to scan function: %w", err)
+		return nil
+	}
+
+	if openQuote != doubleQuoteRune {
+		l.errorf("unexpected rune %q, expected %q", openQuote, doubleQuoteRune)
+		return nil
+	}
+
+	l.emitToken(TypeDoubleQuote, "")
+
+	// Read all the words for function name body.
+	for {
+		if err := l.skip(whitespaces); err != nil {
+			l.errorf("unable to scan function declaration: %w", err)
+			return nil
+		}
+
+		word, err := l.readWord()
+		if err != nil {
+			l.errorf("unable to scan function declaration: %w", err)
+			return nil
+		}
+
+		l.emitToken(TypeWord, word)
+
+		next, err := l.peekRune()
+		if err != nil {
+			l.errorf("unable to scan function declaration: %w", err)
+			return nil
+		}
+
+		if next != doubleQuoteRune {
+			continue
+		}
+
+		// Consuming the closing double quote.
+		_, _, err = l.content.ReadRune()
+		if err != nil {
+			l.errorf("unable to scan function declaration: %w", err)
+			return nil
+		}
+
+		l.emitToken(TypeDoubleQuote, "")
+
+		return scanFunctionBody
+	}
 }
 
-func isLetter(ch rune) bool {
-	return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')
+func scanFunctionBody(l *Lexer) lexerState {
+	if err := l.skip(whitespaces); err != nil {
+		l.errorf("unable to scan function declaration: %w", err)
+		return nil
+	}
+
+	openBlock, _, err := l.content.ReadRune()
+	if err != nil {
+		l.errorf("unable to scan function: %w", err)
+		return nil
+	}
+
+	if openBlock != openBlockRune {
+		l.errorf("unexpected rune %q, expected %q", openBlock, openBlockRune)
+		return nil
+	}
+
+	l.emitToken(TypeOpenBlock, "")
+
+	return scanInstruction
 }
 
-func parseFunctionType(t string) (TokenType, error) {
+func scanInstruction(l *Lexer) lexerState {
+	for {
+		if err := l.skip(whitespaces); err != nil {
+			l.errorf("unable to scan instruction: %w", err)
+			return nil
+		}
+
+		word, err := l.readWord()
+		if err != nil {
+			l.errorf("unable to scan instruction: %w", err)
+			return nil
+		}
+
+		l.emitToken(TypeWord, word)
+
+		if err := l.skip(tabsAndSpaces); err != nil {
+			l.errorf("unable to scan instruction: %w", err)
+			return nil
+		}
+
+		next, err := l.peekRune()
+		if err != nil {
+			l.errorf("unable to scan instruction: %w", err)
+			return nil
+		}
+
+		// TODO handle escaping of instructions....
+		if next != eolRune {
+			continue
+		}
+
+		break
+	}
+
+	l.emitToken(TypeEOL, "")
+
+	if err := l.skip(whitespaces); err != nil {
+		l.errorf("unable to scan instruction: %w", err)
+		return nil
+	}
+
+	next, err := l.peekRune()
+	if err != nil {
+		l.errorf("unable to scan instruction: %w", err)
+		return nil
+	}
+
+	if next != closeBlockRune {
+		return scanInstruction
+	}
+
+	// consuming the closing bracket
+	_, _, err = l.content.ReadRune()
+	if err != nil {
+		l.errorf("unable to scan instruction: %w", err)
+		return nil
+	}
+
+	l.emitToken(TypeCloseBlock, "")
+
+	return scanText
+}
+
+func contains(set []rune, c rune) bool {
+	for _, v := range set {
+		if c == v {
+			return true
+		}
+	}
+
+	return false
+}
+
+func functionType(t string) (TokenType, error) {
 	switch t {
 	case "test":
 		return TypeTestDeclaration, nil
