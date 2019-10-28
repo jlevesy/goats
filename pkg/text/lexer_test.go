@@ -79,8 +79,8 @@ func TestLexer(t *testing.T) {
 			var tokens []*text.Token
 
 			for {
-				tok, more := lexer.Next()
-				if !more {
+				tok := lexer.Next()
+				if tok == nil {
 					break
 				}
 				tokens = append(tokens, tok)

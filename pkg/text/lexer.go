@@ -109,9 +109,8 @@ func (l *Lexer) run() {
 	}
 }
 
-func (l *Lexer) Next() (*Token, bool) {
-	tok, ok := <-l.tokenCh
-	return tok, ok
+func (l *Lexer) Next() *Token {
+	return <-l.tokenCh
 }
 
 func (l *Lexer) emitToken(t TokenType, content string) {
