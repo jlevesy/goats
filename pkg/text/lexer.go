@@ -18,8 +18,8 @@ const (
 	TypeTestDeclaration
 	TypeDoubleQuote
 
-	TypeOpenBlock  // {
-	TypeCloseBlock // }
+	TypeOpenFunctionBody  // {
+	TypeCloseFunctionBody // }
 
 	TypeEOL
 	TypeEOF
@@ -37,10 +37,10 @@ func (t TokenType) String() string {
 		return "test-declaration"
 	case TypeDoubleQuote:
 		return "double-quote"
-	case TypeOpenBlock:
-		return "open-block"
-	case TypeCloseBlock:
-		return "close-block"
+	case TypeOpenFunctionBody:
+		return "open-function-body"
+	case TypeCloseFunctionBody:
+		return "close-function-body"
 	case TypeEOL:
 		return "eol"
 	case TypeEOF:
@@ -72,9 +72,11 @@ const (
 
 // Useful runesets.
 var (
-	tabsAndSpaces = []rune{spaceRune, tabRune}
-	whitespaces   = append(tabsAndSpaces, eolRune)
-	endOfWord     = append(whitespaces, doubleQuoteRune, escapeNextRune)
+	tabsAndSpaces          = []rune{spaceRune, tabRune}
+	tabsSpacesAndComments  = append(tabsAndSpaces, commentLineRune)
+	whitespaces            = append(tabsAndSpaces, eolRune)
+	whitespacesAndComments = append(whitespaces, commentLineRune)
+	endOfWord              = append(whitespaces, doubleQuoteRune, escapeNextRune)
 )
 
 type lexerState func(l *Lexer) lexerState
@@ -107,9 +109,8 @@ func (l *Lexer) run() {
 	}
 }
 
-func (l *Lexer) Next() (*Token, bool) {
-	tok, ok := <-l.tokenCh
-	return tok, ok
+func (l *Lexer) Next() *Token {
+	return <-l.tokenCh
 }
 
 func (l *Lexer) emitToken(t TokenType, content string) {
@@ -155,6 +156,34 @@ func (l *Lexer) skip(skippedSet []rune) error {
 		if _, _, err = l.content.ReadRune(); err != nil {
 			return err
 		}
+
+		if r == commentLineRune {
+			if err = l.skipComment(); err != nil {
+				return err
+			}
+		}
+	}
+}
+
+func (l *Lexer) skipComment() error {
+	for {
+		if err := l.skip(whitespaces); err != nil {
+			return err
+		}
+
+		_, err := l.readWord()
+		if err != nil {
+			return err
+		}
+
+		next, err := l.peekRune()
+		if err != nil {
+			return err
+		}
+
+		if next == eolRune {
+			return nil
+		}
 	}
 }
 
@@ -173,8 +202,7 @@ func (l *Lexer) peekRune() (rune, error) {
 
 func scanText(l *Lexer) lexerState {
 	for {
-		r, _, err := l.content.ReadRune()
-		// Standard termination.
+		err := l.skip(whitespacesAndComments)
 		if err == io.EOF {
 			l.emitToken(TypeEOF, "")
 			return nil
@@ -184,14 +212,13 @@ func scanText(l *Lexer) lexerState {
 			return nil
 		}
 
-		if contains(whitespaces, r) {
-			continue
+		r, _, err := l.content.ReadRune()
+		if err != nil {
+			l.errorf("unable to scan file: %w", err)
+			return nil
 		}
 
 		switch r {
-		case commentLineRune:
-			l.emitToken(TypeLineComment, "")
-			return scanComment
 		case functionDeclarationRune:
 			return scanFunctionDeclaration
 		default:
@@ -201,38 +228,6 @@ func scanText(l *Lexer) lexerState {
 	}
 
 	return nil
-}
-
-func scanComment(l *Lexer) lexerState {
-	if err := l.skip(whitespaces); err != nil {
-		l.errorf("unable to pase comment: %w", err)
-		return nil
-	}
-
-	for {
-		word, err := l.readWord()
-		if err != nil {
-			l.errorf("unable to scan comment: %w", err)
-			return nil
-		}
-
-		l.emitToken(TypeWord, word)
-
-		sep, _, err := l.content.ReadRune()
-		if err == io.EOF {
-			l.emitToken(TypeEOF, "")
-			return nil
-		}
-		if err != nil {
-			l.errorf("unable to scan comment: %w", err)
-			return nil
-		}
-
-		if sep == eolRune {
-			l.emitToken(TypeEOL, "")
-			return scanText
-		}
-	}
 }
 
 func scanFunctionDeclaration(l *Lexer) lexerState {
@@ -332,18 +327,18 @@ func scanFunctionBody(l *Lexer) lexerState {
 		return nil
 	}
 
-	l.emitToken(TypeOpenBlock, "")
+	l.emitToken(TypeOpenFunctionBody, "")
 
 	return scanInstruction
 }
 
 func scanInstruction(l *Lexer) lexerState {
-	for {
-		if err := l.skip(whitespaces); err != nil {
-			l.errorf("unable to scan instruction: %w", err)
-			return nil
-		}
+	if err := l.skip(whitespacesAndComments); err != nil {
+		l.errorf("unable to scan instruction: %w", err)
+		return nil
+	}
 
+	for {
 		word, err := l.readWord()
 		if err != nil {
 			l.errorf("unable to scan instruction: %w", err)
@@ -352,7 +347,7 @@ func scanInstruction(l *Lexer) lexerState {
 
 		l.emitToken(TypeWord, word)
 
-		if err := l.skip(tabsAndSpaces); err != nil {
+		if err := l.skip(tabsSpacesAndComments); err != nil {
 			l.errorf("unable to scan instruction: %w", err)
 			return nil
 		}
@@ -395,7 +390,7 @@ func scanInstruction(l *Lexer) lexerState {
 		return nil
 	}
 
-	l.emitToken(TypeCloseBlock, "")
+	l.emitToken(TypeCloseFunctionBody, "")
 
 	return scanText
 }
