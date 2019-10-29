@@ -69,6 +69,39 @@ func TestLexer(t *testing.T) {
 				{Type: text.TypeEOF, Content: ""},
 			},
 		},
+		{
+			name: "handles multiline instructions",
+			text: `
+@test "this is a random test" {
+	ls /foo/bar \
+		biz \
+		buz \
+		bar
+	assert_ok
+}
+			`,
+			want: []*text.Token{
+				{Type: text.TypeTestDeclaration, Content: ""},
+				{Type: text.TypeDoubleQuote, Content: ""},
+				{Type: text.TypeWord, Content: "this"},
+				{Type: text.TypeWord, Content: "is"},
+				{Type: text.TypeWord, Content: "a"},
+				{Type: text.TypeWord, Content: "random"},
+				{Type: text.TypeWord, Content: "test"},
+				{Type: text.TypeDoubleQuote, Content: ""},
+				{Type: text.TypeOpenFunctionBody, Content: ""},
+				{Type: text.TypeWord, Content: "ls"},
+				{Type: text.TypeWord, Content: "/foo/bar"},
+				{Type: text.TypeWord, Content: "biz"},
+				{Type: text.TypeWord, Content: "buz"},
+				{Type: text.TypeWord, Content: "bar"},
+				{Type: text.TypeEOL, Content: ""},
+				{Type: text.TypeWord, Content: "assert_ok"},
+				{Type: text.TypeEOL, Content: ""},
+				{Type: text.TypeCloseFunctionBody, Content: ""},
+				{Type: text.TypeEOF, Content: ""},
+			},
+		},
 	}
 
 	for _, test := range tests {

@@ -16,6 +16,8 @@ Right now it applies the following algorithm.
   - To an interpreted go function if the statement is `assert_ok`
   - Otherwise, to a command call.
 
+The `pkg/text` now carries a basic parser for goats file.
+
 ## Using it
 
 With go modules enabled

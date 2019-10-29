@@ -72,11 +72,11 @@ const (
 
 // Useful runesets.
 var (
-	tabsAndSpaces          = []rune{spaceRune, tabRune}
-	tabsSpacesAndComments  = append(tabsAndSpaces, commentLineRune)
-	whitespaces            = append(tabsAndSpaces, eolRune)
-	whitespacesAndComments = append(whitespaces, commentLineRune)
-	endOfWord              = append(whitespaces, doubleQuoteRune, escapeNextRune)
+	tabsAndSpaces            = []rune{spaceRune, tabRune}
+	tabsSpacesCommentsEscape = append(tabsAndSpaces, commentLineRune, escapeNextRune)
+	whitespaces              = append(tabsAndSpaces, eolRune)
+	whitespacesAndComments   = append(whitespaces, commentLineRune)
+	endOfWord                = append(whitespaces, doubleQuoteRune, escapeNextRune)
 )
 
 type lexerState func(l *Lexer) lexerState
@@ -142,14 +142,14 @@ func (l *Lexer) readWord() (string, error) {
 	}
 }
 
-func (l *Lexer) skip(skippedSet []rune) error {
+func (l *Lexer) advance(skippedRunes []rune) error {
 	for {
 		r, err := l.peekRune()
 		if err != nil {
 			return err
 		}
 
-		if !contains(skippedSet, r) {
+		if !contains(skippedRunes, r) {
 			return nil
 		}
 
@@ -162,12 +162,19 @@ func (l *Lexer) skip(skippedSet []rune) error {
 				return err
 			}
 		}
+
+		if r == escapeNextRune {
+			_, _, err = l.content.ReadRune()
+			if err != nil {
+				return err
+			}
+		}
 	}
 }
 
 func (l *Lexer) skipComment() error {
 	for {
-		if err := l.skip(whitespaces); err != nil {
+		if err := l.advance(whitespaces); err != nil {
 			return err
 		}
 
@@ -202,7 +209,7 @@ func (l *Lexer) peekRune() (rune, error) {
 
 func scanText(l *Lexer) lexerState {
 	for {
-		err := l.skip(whitespacesAndComments)
+		err := l.advance(whitespacesAndComments)
 		if err == io.EOF {
 			l.emitToken(TypeEOF, "")
 			return nil
@@ -245,7 +252,7 @@ func scanFunctionDeclaration(l *Lexer) lexerState {
 
 	l.emitToken(funcType, "")
 
-	if err = l.skip(whitespaces); err != nil {
+	if err = l.advance(whitespaces); err != nil {
 		l.errorf("unable to scan function declaration: %w", err)
 		return nil
 	}
@@ -254,7 +261,7 @@ func scanFunctionDeclaration(l *Lexer) lexerState {
 }
 
 func scanFunctionName(l *Lexer) lexerState {
-	if err := l.skip(whitespaces); err != nil {
+	if err := l.advance(whitespaces); err != nil {
 		l.errorf("unable to scan function declaration: %w", err)
 		return nil
 	}
@@ -274,7 +281,7 @@ func scanFunctionName(l *Lexer) lexerState {
 
 	// Read all the words for function name body.
 	for {
-		if err := l.skip(whitespaces); err != nil {
+		if err := l.advance(whitespaces); err != nil {
 			l.errorf("unable to scan function declaration: %w", err)
 			return nil
 		}
@@ -311,7 +318,7 @@ func scanFunctionName(l *Lexer) lexerState {
 }
 
 func scanFunctionBody(l *Lexer) lexerState {
-	if err := l.skip(whitespaces); err != nil {
+	if err := l.advance(whitespaces); err != nil {
 		l.errorf("unable to scan function declaration: %w", err)
 		return nil
 	}
@@ -333,7 +340,7 @@ func scanFunctionBody(l *Lexer) lexerState {
 }
 
 func scanInstruction(l *Lexer) lexerState {
-	if err := l.skip(whitespacesAndComments); err != nil {
+	if err := l.advance(whitespacesAndComments); err != nil {
 		l.errorf("unable to scan instruction: %w", err)
 		return nil
 	}
@@ -347,7 +354,7 @@ func scanInstruction(l *Lexer) lexerState {
 
 		l.emitToken(TypeWord, word)
 
-		if err := l.skip(tabsSpacesAndComments); err != nil {
+		if err = l.advance(tabsSpacesCommentsEscape); err != nil {
 			l.errorf("unable to scan instruction: %w", err)
 			return nil
 		}
@@ -358,7 +365,6 @@ func scanInstruction(l *Lexer) lexerState {
 			return nil
 		}
 
-		// TODO handle escaping of instructions....
 		if next != eolRune {
 			continue
 		}
@@ -368,7 +374,7 @@ func scanInstruction(l *Lexer) lexerState {
 
 	l.emitToken(TypeEOL, "")
 
-	if err := l.skip(whitespaces); err != nil {
+	if err := l.advance(whitespaces); err != nil {
 		l.errorf("unable to scan instruction: %w", err)
 		return nil
 	}

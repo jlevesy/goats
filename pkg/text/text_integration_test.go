@@ -21,7 +21,7 @@ func TestParsing(t *testing.T) {
 				Name: "test parsing integration",
 				Instructions: []vm.Instruction{
 					&vm.ExecInstruction{
-						Cmd: []string{"ls", "/foo/bar"},
+						Cmd: []string{"ls", "/foo/bar", "is", "a", "long", "instruction"},
 					},
 					&vm.ExecInstruction{
 						Cmd: []string{"assert_ok"},
