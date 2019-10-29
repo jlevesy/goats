@@ -2,7 +2,11 @@
 # This asset is used by the text package integration test suite.
 
 @test "test parsing integration" {
-    ls /foo/bar
+    ls /foo/bar \
+      is \
+      a \
+      long \
+      instruction
     assert_ok
 }
 
