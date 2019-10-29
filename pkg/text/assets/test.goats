@@ -1,0 +1,12 @@
+# Here are some random comments.
+# This asset is used by the text package integration test suite.
+
+@test "test parsing integration" {
+    ls /foo/bar
+    assert_ok
+}
+
+@test "test parsing integration 2" {
+    ls /bar/biz
+    assert_ok
+}

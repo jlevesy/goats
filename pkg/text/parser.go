@@ -29,7 +29,7 @@ func NewParser(l Scanner) *Parser {
 		lexer:  l,
 		state:  parseSuite,
 		suite:  &vm.Suite{},
-		testID: -1, // This is KAK !
+		testID: -1, // This is not good !
 	}
 }
 
