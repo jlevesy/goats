@@ -52,7 +52,7 @@ func TestParser(t *testing.T) {
 				{Type: text.TypeEOF, Content: ""},
 			},
 			want: &vm.Suite{
-				Tests: []vm.Test{
+				Tests: []*vm.Test{
 					{
 						Name: "this is a random test",
 						Instructions: []vm.Instruction{
