@@ -20,10 +20,9 @@ func (e execInstruction) Exec(prev *State) (*State, error) {
 	cmd := exec.Command(rawCmd[0])
 	cmd.Args = rawCmd
 
-	var stdout, stderr bytes.Buffer
+	var buf bytes.Buffer
 
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
+	cmd.Stdout, cmd.Stderr = &buf, &buf
 
 	err := cmd.Run()
 

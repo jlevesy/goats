@@ -3,6 +3,7 @@ package text_test
 import (
 	"testing"
 
+	"github.com/jlevesy/goats/pkg/instruction"
 	"github.com/jlevesy/goats/pkg/text"
 	"github.com/jlevesy/goats/pkg/vm"
 	"github.com/stretchr/testify/assert"
@@ -56,12 +57,8 @@ func TestParser_Parse(t *testing.T) {
 					{
 						Name: "this is a random test",
 						Instructions: []vm.Instruction{
-							&vm.ExecInstruction{
-								Cmd: []string{"ls", "/foo/bar"},
-							},
-							&vm.ExecInstruction{
-								Cmd: []string{"echo", "coucou"},
-							},
+							instruction.NewExec([]string{"ls", "/foo/bar"}),
+							instruction.NewExec([]string{"echo", "coucou"}),
 						},
 					},
 				},

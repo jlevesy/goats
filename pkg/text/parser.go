@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/jlevesy/goats/pkg/instruction"
 	"github.com/jlevesy/goats/pkg/vm"
 )
 
@@ -159,7 +160,7 @@ func parseTestBody(p *Parser) (parserState, error) {
 			currentInstruction = append(currentInstruction, tok.Content)
 		case TypeEOL:
 			// TODO => resolve instruction here
-			instructions = append(instructions, &vm.ExecInstruction{Cmd: currentInstruction})
+			instructions = append(instructions, instruction.NewExec(currentInstruction))
 			currentInstruction = nil
 		case TypeCloseFunctionBody:
 			p.suite.Tests[p.testID].Instructions = instructions

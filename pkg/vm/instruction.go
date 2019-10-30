@@ -2,7 +2,6 @@ package vm
 
 import (
 	"context"
-	"io"
 )
 
 // Execution satuses.
@@ -44,5 +43,5 @@ func (f InstructionFunc) Exec(ctx context.Context, tr *TestResult) error {
 // InstructionOutput is the output for an instruction.
 type InstructionOutput struct {
 	Status ExecStatus
-	Output io.ReadSeeker
+	Output []byte
 }
