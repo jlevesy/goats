@@ -1,15 +1,16 @@
 package vm
 
-// Runtime represents some kind of state carried across instructions during executions.
-type Runtime struct {
+// TestResult represents the current state of the execution.
+type TestResult struct {
+	Name    string
 	Outputs []InstructionOutput
 }
 
-func (r *Runtime) Report(out InstructionOutput) {
+func (r *TestResult) Report(out InstructionOutput) {
 	r.Outputs = append(r.Outputs, out)
 }
 
-func (r *Runtime) LastOutput() InstructionOutput {
+func (r *TestResult) LastOutput() InstructionOutput {
 	if len(r.Outputs) == 0 {
 		return InstructionOutput{}
 	}
@@ -17,7 +18,7 @@ func (r *Runtime) LastOutput() InstructionOutput {
 	return r.Outputs[len(r.Outputs)-1]
 }
 
-func (r *Runtime) Status() ExecStatus {
+func (r *TestResult) Status() ExecStatus {
 	if len(r.Outputs) == 0 {
 		return ExecStatusUnkown
 	}

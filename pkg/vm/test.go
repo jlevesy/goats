@@ -2,10 +2,7 @@ package vm
 
 import (
 	"context"
-	"errors"
 )
-
-var ErrFatal = errors.New("fatal instruction error")
 
 // Test is a collection of instructions (+ some metadata) to execute in order to validate that an application is working.
 // TODO: add Setup and Teardown.
@@ -14,19 +11,21 @@ type Test struct {
 	Instructions []Instruction
 }
 
-func (t *Test) Exec(ctx context.Context) (*Runtime, error) {
-	var rt Runtime
+func (t *Test) Exec(ctx context.Context) (*TestResult, error) {
+	tr := TestResult{
+		Name: t.Name,
+	}
 
 	for _, inst := range t.Instructions {
-		if err := inst.Exec(ctx, &rt); err != nil {
+		if err := inst.Exec(ctx, &tr); err != nil {
 			return nil, err
 		}
 
-		if rt.LastOutput().Status == ExecStatusFatal {
+		if tr.LastOutput().Status == ExecStatusFatal {
 			// Abort execution if there is a fatal error.
-			return &rt, nil
+			return &tr, nil
 		}
 	}
 
-	return &rt, nil
+	return &tr, nil
 }

@@ -18,7 +18,7 @@ func (s Suite) Exec(ctx context.Context, workers int) (*SuiteResult, error) {
 	var result SuiteResult
 
 	testInput := make(chan *Test, len(s.Tests))
-	testOutput := make(chan *Runtime, len(s.Tests))
+	testOutput := make(chan *TestResult, len(s.Tests))
 	errg, routineCtx := errgroup.WithContext(ctx)
 
 	for i := 0; i < workers; i++ {
@@ -64,7 +64,7 @@ func (s Suite) Exec(ctx context.Context, workers int) (*SuiteResult, error) {
 
 // SuiteResult represents the result of a suite.
 type SuiteResult struct {
-	Tests []*Runtime
+	Tests []*TestResult
 }
 
 // ExecStatus return the suite status.

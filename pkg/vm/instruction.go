@@ -30,15 +30,15 @@ func (e ExecStatus) String() string {
 
 // Instruction is an executable statement.
 type Instruction interface {
-	Exec(ctx context.Context, rt *Runtime) error
+	Exec(ctx context.Context, tr *TestResult) error
 }
 
 // InstructionFunc is an helper to create instructions as func.
-type InstructionFunc func(ctx context.Context, rt *Runtime) error
+type InstructionFunc func(ctx context.Context, tr *TestResult) error
 
 // Exec calls the inner function.
-func (f InstructionFunc) Exec(ctx context.Context, rt *Runtime) error {
-	return f(ctx, rt)
+func (f InstructionFunc) Exec(ctx context.Context, tr *TestResult) error {
+	return f(ctx, tr)
 }
 
 // InstructionOutput is the output for an instruction.
