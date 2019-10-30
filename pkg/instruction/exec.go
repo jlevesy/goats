@@ -18,8 +18,8 @@ func NewExec(cmd []string) *Exec {
 	return &Exec{cmd: cmd}
 }
 
-// Exec executes setup command. It implements the vm.Instruction interface.
-func (e Exec) Exec(ctx context.Context, result *vm.TestResult) error {
+// Exec executes given command.
+func (e Exec) Exec(ctx context.Context, t *vm.TestResult) error {
 	cmd := exec.CommandContext(ctx, e.cmd[0], e.cmd[1:]...)
 
 	var buf = bytes.Buffer{}
@@ -31,20 +31,14 @@ func (e Exec) Exec(ctx context.Context, result *vm.TestResult) error {
 		// TODO this is shitty, we need to be able to run multiple assertions on the same output.
 		// At the moment we can't.
 		// We need to have a collection of outputs and a collection of results.
-		result.Report(vm.InstructionOutput{
-			Status: vm.ExecStatusFailure,
-			Output: buf.Bytes(),
-		})
+		t.Report(vm.ExecStatusFailure)
 		return nil
 	}
 	if err != nil {
 		return err
 	}
 
-	result.Report(vm.InstructionOutput{
-		Status: vm.ExecStatusSuccess,
-		Output: buf.Bytes(),
-	})
+	t.Report(vm.ExecStatusSuccess)
 
 	return nil
 }

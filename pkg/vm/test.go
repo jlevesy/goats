@@ -21,11 +21,51 @@ func (t *Test) Exec(ctx context.Context) (*TestResult, error) {
 			return nil, err
 		}
 
-		if tr.LastOutput().Status == ExecStatusFatal {
+		if tr.Status() == ExecStatusFatal {
 			// Abort execution if there is a fatal error.
 			return &tr, nil
 		}
 	}
 
 	return &tr, nil
+}
+
+// TestResult is the result
+type TestResult struct {
+	Name     string
+	Statuses []ExecStatus
+}
+
+func (r *TestResult) Report(st ExecStatus) {
+	r.Statuses = append(r.Statuses, st)
+}
+
+func (r *TestResult) LastStatus() ExecStatus {
+	if len(r.Statuses) == 0 {
+		return ExecStatusUnkown
+	}
+
+	return r.Statuses[len(r.Statuses)-1]
+}
+
+func (r *TestResult) Status() ExecStatus {
+	if len(r.Statuses) == 0 {
+		return ExecStatusUnkown
+	}
+
+	for _, st := range r.Statuses {
+		if st == ExecStatusUnkown {
+			return ExecStatusUnkown
+		}
+
+		if st == ExecStatusFatal {
+			return ExecStatusFatal
+		}
+
+		if st != ExecStatusSuccess {
+			return ExecStatusFailure
+		}
+	}
+
+	return ExecStatusSuccess
 }

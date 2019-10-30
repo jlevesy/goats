@@ -6,9 +6,9 @@ import (
 	"github.com/jlevesy/goats/pkg/vm"
 )
 
-func reportOutput(out vm.InstructionOutput) vm.InstructionFunc {
+func reportStatus(st vm.ExecStatus) vm.InstructionFunc {
 	return func(_ context.Context, tr *vm.TestResult) error {
-		tr.Report(out)
+		tr.Report(st)
 		return nil
 	}
 }

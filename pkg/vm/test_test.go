@@ -11,64 +11,64 @@ import (
 
 func TestTest_Exec(t *testing.T) {
 	tests := []struct {
-		name           string
-		t              vm.Test
-		wantErr        bool
-		wantResultsLen int
-		wantStatus     vm.ExecStatus
+		name            string
+		t               vm.Test
+		wantErr         bool
+		wantStatusesLen int
+		wantStatus      vm.ExecStatus
 	}{
 		{
 			name: "executes all instructions",
 			t: vm.Test{
 				Instructions: []vm.Instruction{
-					reportOutput(vm.InstructionOutput{Status: vm.ExecStatusSuccess}),
-					reportOutput(vm.InstructionOutput{Status: vm.ExecStatusSuccess}),
-					reportOutput(vm.InstructionOutput{Status: vm.ExecStatusSuccess}),
+					reportStatus(vm.ExecStatusSuccess),
+					reportStatus(vm.ExecStatusSuccess),
+					reportStatus(vm.ExecStatusSuccess),
 				},
 			},
-			wantErr:        false,
-			wantResultsLen: 3,
-			wantStatus:     vm.ExecStatusSuccess,
+			wantErr:         false,
+			wantStatusesLen: 3,
+			wantStatus:      vm.ExecStatusSuccess,
 		},
 		{
-			name:           "repports unknown if no insructions",
-			t:              vm.Test{},
-			wantErr:        false,
-			wantResultsLen: 0,
-			wantStatus:     vm.ExecStatusUnkown,
+			name:            "repports unknown if no insructions",
+			t:               vm.Test{},
+			wantErr:         false,
+			wantStatusesLen: 0,
+			wantStatus:      vm.ExecStatusUnkown,
 		},
 		{
 			name: "continues if failure happens",
 			t: vm.Test{
 				Instructions: []vm.Instruction{
-					reportOutput(vm.InstructionOutput{Status: vm.ExecStatusSuccess}),
-					reportOutput(vm.InstructionOutput{Status: vm.ExecStatusFailure}),
-					reportOutput(vm.InstructionOutput{Status: vm.ExecStatusSuccess}),
+					reportStatus(vm.ExecStatusSuccess),
+					reportStatus(vm.ExecStatusFailure),
+					reportStatus(vm.ExecStatusSuccess),
 				},
 			},
-			wantErr:        false,
-			wantResultsLen: 3,
-			wantStatus:     vm.ExecStatusFailure,
+			wantErr:         false,
+			wantStatusesLen: 3,
+			wantStatus:      vm.ExecStatusFailure,
 		},
 		{
 			name: "stops if fatal failure happens",
 			t: vm.Test{
 				Instructions: []vm.Instruction{
-					reportOutput(vm.InstructionOutput{Status: vm.ExecStatusSuccess}),
-					reportOutput(vm.InstructionOutput{Status: vm.ExecStatusFatal}),
-					reportOutput(vm.InstructionOutput{Status: vm.ExecStatusSuccess}),
+					reportStatus(vm.ExecStatusSuccess),
+					reportStatus(vm.ExecStatusFatal),
+					reportStatus(vm.ExecStatusSuccess),
 				},
 			},
-			wantErr:        false,
-			wantResultsLen: 2,
-			wantStatus:     vm.ExecStatusFatal,
+			wantErr:         false,
+			wantStatusesLen: 2,
+			wantStatus:      vm.ExecStatusFatal,
 		},
 		{
 			name: "stops if instruction reports a technical error",
 			t: vm.Test{
 				Instructions: []vm.Instruction{
-					reportOutput(vm.InstructionOutput{Status: vm.ExecStatusSuccess}),
-					reportOutput(vm.InstructionOutput{Status: vm.ExecStatusSuccess}),
+					reportStatus(vm.ExecStatusSuccess),
+					reportStatus(vm.ExecStatusSuccess),
 					fail(errors.New("nope")),
 				},
 			},
@@ -87,7 +87,7 @@ func TestTest_Exec(t *testing.T) {
 				return
 			}
 
-			assert.Len(t, result.Outputs, test.wantResultsLen)
+			assert.Len(t, result.Statuses, test.wantStatusesLen)
 			assert.NoError(t, err)
 			assert.Equal(t, test.wantStatus, result.Status())
 		})

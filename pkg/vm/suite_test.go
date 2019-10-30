@@ -26,15 +26,15 @@ func TestSuite_Exec(t *testing.T) {
 					{
 						Name: "test-1",
 						Instructions: []vm.Instruction{
-							reportOutput(vm.InstructionOutput{Status: vm.ExecStatusSuccess}),
-							reportOutput(vm.InstructionOutput{Status: vm.ExecStatusSuccess}),
+							reportStatus(vm.ExecStatusSuccess),
+							reportStatus(vm.ExecStatusSuccess),
 						},
 					},
 					{
 						Name: "test-2",
 						Instructions: []vm.Instruction{
-							reportOutput(vm.InstructionOutput{Status: vm.ExecStatusSuccess}),
-							reportOutput(vm.InstructionOutput{Status: vm.ExecStatusSuccess}),
+							reportStatus(vm.ExecStatusSuccess),
+							reportStatus(vm.ExecStatusSuccess),
 						},
 					},
 				},
@@ -50,15 +50,15 @@ func TestSuite_Exec(t *testing.T) {
 					{
 						Name: "test-1",
 						Instructions: []vm.Instruction{
-							reportOutput(vm.InstructionOutput{Status: vm.ExecStatusSuccess}),
-							reportOutput(vm.InstructionOutput{Status: vm.ExecStatusSuccess}),
+							reportStatus(vm.ExecStatusSuccess),
+							reportStatus(vm.ExecStatusSuccess),
 						},
 					},
 					{
 						Name: "test-2",
 						Instructions: []vm.Instruction{
-							reportOutput(vm.InstructionOutput{Status: vm.ExecStatusSuccess}),
-							reportOutput(vm.InstructionOutput{Status: vm.ExecStatusSuccess}),
+							reportStatus(vm.ExecStatusSuccess),
+							reportStatus(vm.ExecStatusSuccess),
 						},
 					},
 				},
@@ -74,15 +74,15 @@ func TestSuite_Exec(t *testing.T) {
 					{
 						Name: "test-1",
 						Instructions: []vm.Instruction{
-							reportOutput(vm.InstructionOutput{Status: vm.ExecStatusSuccess}),
-							reportOutput(vm.InstructionOutput{Status: vm.ExecStatusUnkown}),
+							reportStatus(vm.ExecStatusSuccess),
+							reportStatus(vm.ExecStatusUnkown),
 						},
 					},
 					{
 						Name: "test-2",
 						Instructions: []vm.Instruction{
-							reportOutput(vm.InstructionOutput{Status: vm.ExecStatusSuccess}),
-							reportOutput(vm.InstructionOutput{Status: vm.ExecStatusSuccess}),
+							reportStatus(vm.ExecStatusSuccess),
+							reportStatus(vm.ExecStatusSuccess),
 						},
 					},
 				},
@@ -98,15 +98,15 @@ func TestSuite_Exec(t *testing.T) {
 					{
 						Name: "test-1",
 						Instructions: []vm.Instruction{
-							reportOutput(vm.InstructionOutput{Status: vm.ExecStatusSuccess}),
-							reportOutput(vm.InstructionOutput{Status: vm.ExecStatusFailure}),
+							reportStatus(vm.ExecStatusSuccess),
+							reportStatus(vm.ExecStatusFailure),
 						},
 					},
 					{
 						Name: "test-2",
 						Instructions: []vm.Instruction{
-							reportOutput(vm.InstructionOutput{Status: vm.ExecStatusSuccess}),
-							reportOutput(vm.InstructionOutput{Status: vm.ExecStatusSuccess}),
+							reportStatus(vm.ExecStatusSuccess),
+							reportStatus(vm.ExecStatusSuccess),
 						},
 					},
 				},
@@ -122,14 +122,14 @@ func TestSuite_Exec(t *testing.T) {
 					{
 						Name: "test-1",
 						Instructions: []vm.Instruction{
-							reportOutput(vm.InstructionOutput{Status: vm.ExecStatusSuccess}),
+							reportStatus(vm.ExecStatusSuccess),
 						},
 					},
 					{
 						Name: "test-2",
 						Instructions: []vm.Instruction{
-							reportOutput(vm.InstructionOutput{Status: vm.ExecStatusSuccess}),
-							reportOutput(vm.InstructionOutput{Status: vm.ExecStatusSuccess}),
+							reportStatus(vm.ExecStatusSuccess),
+							reportStatus(vm.ExecStatusSuccess),
 							fail(errors.New("nope")),
 						},
 					},

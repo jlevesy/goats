@@ -39,9 +39,3 @@ type InstructionFunc func(ctx context.Context, tr *TestResult) error
 func (f InstructionFunc) Exec(ctx context.Context, tr *TestResult) error {
 	return f(ctx, tr)
 }
-
-// InstructionOutput is the output for an instruction.
-type InstructionOutput struct {
-	Status ExecStatus
-	Output []byte
-}
