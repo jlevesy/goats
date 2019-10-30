@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestLexer(t *testing.T) {
+func TestLexer_Scan(t *testing.T) {
 	tests := []struct {
 		name string
 		text string

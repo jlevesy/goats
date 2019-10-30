@@ -23,7 +23,7 @@ func (m *mockScanner) Next() *text.Token {
 	return next
 }
 
-func TestParser(t *testing.T) {
+func TestParser_Parse(t *testing.T) {
 	tests := []struct {
 		name    string
 		tokens  []*text.Token
