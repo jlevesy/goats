@@ -4,8 +4,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/jlevesy/goats/pkg/goats"
+	"github.com/jlevesy/goats/pkg/instruction"
 	"github.com/jlevesy/goats/pkg/text"
-	"github.com/jlevesy/goats/pkg/vm"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -15,28 +16,20 @@ func TestParsing(t *testing.T) {
 	require.NoError(t, err)
 	defer file.Close()
 
-	want := &vm.Suite{
-		Tests: []*vm.Test{
+	want := &goats.Suite{
+		Tests: []*goats.Test{
 			{
 				Name: "test parsing integration",
-				Instructions: []vm.Instruction{
-					&vm.ExecInstruction{
-						Cmd: []string{"ls", "/foo/bar", "is", "a", "long", "instruction"},
-					},
-					&vm.ExecInstruction{
-						Cmd: []string{"assert_ok"},
-					},
+				Instructions: []goats.Instruction{
+					instruction.NewExec([]string{"ls", "/foo/bar", "is", "a", "long", "instruction"}),
+					instruction.NewExec([]string{"assert_ok"}),
 				},
 			},
 			{
 				Name: "test parsing integration 2",
-				Instructions: []vm.Instruction{
-					&vm.ExecInstruction{
-						Cmd: []string{"ls", "/bar/biz"},
-					},
-					&vm.ExecInstruction{
-						Cmd: []string{"assert_ok"},
-					},
+				Instructions: []goats.Instruction{
+					instruction.NewExec([]string{"ls", "/bar/biz"}),
+					instruction.NewExec([]string{"assert_ok"}),
 				},
 			},
 		},

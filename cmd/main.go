@@ -1,10 +1,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
-	"github.com/jlevesy/goats/pkg/exec"
+	"github.com/jlevesy/goats/pkg/text"
 )
 
 func main() {
@@ -21,20 +22,20 @@ func main() {
 	// useless, but not to forget after.
 	defer file.Close()
 
-	stmts, err := exec.Parse(file)
+	suite, err := text.NewParser(text.NewLexer(file)).Parse()
 	if err != nil {
-		fmt.Printf("unable to parse: %w\n", err)
+		fmt.Printf("unable to parse suite: %w\n", err)
 		os.Exit(1)
 	}
 
-	insts, err := exec.Resolve(stmts)
+	ctx := context.Background()
+	results, err := suite.Exec(ctx, 1)
 	if err != nil {
-		fmt.Printf("unable to resolve statements: %w\n", err)
+		fmt.Printf("unable to execute suite: %w\n", err)
 		os.Exit(1)
 	}
 
-	if err := exec.Exec(insts); err != nil {
-		fmt.Printf("unable to execute instructions: %w\n", err)
-		os.Exit(1)
+	for _, res := range results.Tests {
+		fmt.Printf("Tests %q has status %q", res.Name, res.Status())
 	}
 }

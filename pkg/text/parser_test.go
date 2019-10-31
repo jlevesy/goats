@@ -3,8 +3,9 @@ package text_test
 import (
 	"testing"
 
+	"github.com/jlevesy/goats/pkg/goats"
+	"github.com/jlevesy/goats/pkg/instruction"
 	"github.com/jlevesy/goats/pkg/text"
-	"github.com/jlevesy/goats/pkg/vm"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,11 +24,11 @@ func (m *mockScanner) Next() *text.Token {
 	return next
 }
 
-func TestParser(t *testing.T) {
+func TestParser_Parse(t *testing.T) {
 	tests := []struct {
 		name    string
 		tokens  []*text.Token
-		want    *vm.Suite
+		want    *goats.Suite
 		wantErr bool
 	}{
 		{
@@ -51,17 +52,13 @@ func TestParser(t *testing.T) {
 				{Type: text.TypeCloseFunctionBody, Content: ""},
 				{Type: text.TypeEOF, Content: ""},
 			},
-			want: &vm.Suite{
-				Tests: []*vm.Test{
+			want: &goats.Suite{
+				Tests: []*goats.Test{
 					{
 						Name: "this is a random test",
-						Instructions: []vm.Instruction{
-							&vm.ExecInstruction{
-								Cmd: []string{"ls", "/foo/bar"},
-							},
-							&vm.ExecInstruction{
-								Cmd: []string{"echo", "coucou"},
-							},
+						Instructions: []goats.Instruction{
+							instruction.NewExec([]string{"ls", "/foo/bar"}),
+							instruction.NewExec([]string{"echo", "coucou"}),
 						},
 					},
 				},

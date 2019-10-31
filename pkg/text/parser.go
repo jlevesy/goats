@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jlevesy/goats/pkg/vm"
+	"github.com/jlevesy/goats/pkg/goats"
+	"github.com/jlevesy/goats/pkg/instruction"
 )
 
 // Scanner scans for token.
@@ -15,12 +16,12 @@ type Scanner interface {
 
 type parserState func(*Parser) (parserState, error)
 
-// Parser transforms lexer tokens into an actual vm TestSuite.
+// Parser transforms lexer tokens into an actual goats TestSuite.
 type Parser struct {
 	lexer Scanner
 	state parserState
 
-	suite  *vm.Suite
+	suite  *goats.Suite
 	testID int32
 }
 
@@ -28,13 +29,13 @@ func NewParser(l Scanner) *Parser {
 	return &Parser{
 		lexer:  l,
 		state:  parseSuite,
-		suite:  &vm.Suite{},
+		suite:  &goats.Suite{},
 		testID: -1, // This is not good !
 	}
 }
 
-// Parse returns the *vm.Suite
-func (p *Parser) Parse() (*vm.Suite, error) {
+// Parse returns the *goats.Suite
+func (p *Parser) Parse() (*goats.Suite, error) {
 	var err error
 
 	for {
@@ -128,7 +129,7 @@ func parseTestName(p *Parser) (parserState, error) {
 		words = append(words, tok.Content)
 	}
 
-	t := vm.Test{
+	t := goats.Test{
 		Name: strings.Join(words, string(spaceRune)),
 	}
 
@@ -145,7 +146,7 @@ func parseTestBody(p *Parser) (parserState, error) {
 	}
 
 	var (
-		instructions       []vm.Instruction
+		instructions       []goats.Instruction
 		currentInstruction []string
 	)
 	for {
@@ -159,7 +160,7 @@ func parseTestBody(p *Parser) (parserState, error) {
 			currentInstruction = append(currentInstruction, tok.Content)
 		case TypeEOL:
 			// TODO => resolve instruction here
-			instructions = append(instructions, &vm.ExecInstruction{Cmd: currentInstruction})
+			instructions = append(instructions, instruction.NewExec(currentInstruction))
 			currentInstruction = nil
 		case TypeCloseFunctionBody:
 			p.suite.Tests[p.testID].Instructions = instructions

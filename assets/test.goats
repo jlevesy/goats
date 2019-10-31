@@ -1,4 +1,6 @@
-true
-assert_ok
-false
-assert_ok
+# Here is an example of a goats file.
+
+@test "test true" {
+    true
+    false
+}

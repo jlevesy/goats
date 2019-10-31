@@ -10,13 +10,7 @@ The main use case behind this is to create a command line test framework heavily
 
 This is a wild PoC which only shows that it is possible to do something like this.
 
-Right now it applies the following algorithm.
-- It reads statements line per line
-- Then maps statements to instruction:
-  - To an interpreted go function if the statement is `assert_ok`
-  - Otherwise, to a command call.
-
-The `pkg/text` now carries a basic parser for goats file.
+At the moment it is able to run a set of commands on the system and capture their output.
 
 ## Using it
 
