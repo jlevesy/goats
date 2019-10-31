@@ -1,18 +1,18 @@
-package vm_test
+package goats_test
 
 import (
 	"context"
 	"testing"
 
+	"github.com/jlevesy/goats/pkg/goats"
 	gtesting "github.com/jlevesy/goats/pkg/testing"
-	"github.com/jlevesy/goats/pkg/vm"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestSuite_Exec(t *testing.T) {
 	tests := []struct {
 		name           string
-		suite          vm.Suite
+		suite          goats.Suite
 		workers        int
 		wantStatus     gtesting.Status
 		wantResultsLen int
@@ -20,18 +20,18 @@ func TestSuite_Exec(t *testing.T) {
 		{
 			name:    "executes all tests in parallel",
 			workers: 2,
-			suite: vm.Suite{
-				Tests: []*vm.Test{
+			suite: goats.Suite{
+				Tests: []*goats.Test{
 					{
 						Name: "test-1",
-						Instructions: []vm.Instruction{
+						Instructions: []goats.Instruction{
 							reportStatus(gtesting.StatusSuccess),
 							reportStatus(gtesting.StatusSuccess),
 						},
 					},
 					{
 						Name: "test-2",
-						Instructions: []vm.Instruction{
+						Instructions: []goats.Instruction{
 							reportStatus(gtesting.StatusSuccess),
 							reportStatus(gtesting.StatusSuccess),
 						},
@@ -44,18 +44,18 @@ func TestSuite_Exec(t *testing.T) {
 		{
 			name:    "reports unknown if there is no workers registered",
 			workers: 0,
-			suite: vm.Suite{
-				Tests: []*vm.Test{
+			suite: goats.Suite{
+				Tests: []*goats.Test{
 					{
 						Name: "test-1",
-						Instructions: []vm.Instruction{
+						Instructions: []goats.Instruction{
 							reportStatus(gtesting.StatusSuccess),
 							reportStatus(gtesting.StatusSuccess),
 						},
 					},
 					{
 						Name: "test-2",
-						Instructions: []vm.Instruction{
+						Instructions: []goats.Instruction{
 							reportStatus(gtesting.StatusSuccess),
 							reportStatus(gtesting.StatusSuccess),
 						},
@@ -66,44 +66,20 @@ func TestSuite_Exec(t *testing.T) {
 			wantResultsLen: 0,
 		},
 		{
-			name:    "reports unknown if one test is unknown",
-			workers: 1,
-			suite: vm.Suite{
-				Tests: []*vm.Test{
-					{
-						Name: "test-1",
-						Instructions: []vm.Instruction{
-							reportStatus(gtesting.StatusSuccess),
-							reportStatus(gtesting.StatusUnknown),
-						},
-					},
-					{
-						Name: "test-2",
-						Instructions: []vm.Instruction{
-							reportStatus(gtesting.StatusSuccess),
-							reportStatus(gtesting.StatusSuccess),
-						},
-					},
-				},
-			},
-			wantStatus:     gtesting.StatusUnknown,
-			wantResultsLen: 2,
-		},
-		{
 			name:    "reports failure if one test is failed",
 			workers: 1,
-			suite: vm.Suite{
-				Tests: []*vm.Test{
+			suite: goats.Suite{
+				Tests: []*goats.Test{
 					{
 						Name: "test-1",
-						Instructions: []vm.Instruction{
+						Instructions: []goats.Instruction{
 							reportStatus(gtesting.StatusSuccess),
 							reportStatus(gtesting.StatusFailure),
 						},
 					},
 					{
 						Name: "test-2",
-						Instructions: []vm.Instruction{
+						Instructions: []goats.Instruction{
 							reportStatus(gtesting.StatusSuccess),
 							reportStatus(gtesting.StatusSuccess),
 						},

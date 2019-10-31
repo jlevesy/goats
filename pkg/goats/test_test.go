@@ -1,24 +1,24 @@
-package vm_test
+package goats_test
 
 import (
 	"context"
 	"testing"
 
+	"github.com/jlevesy/goats/pkg/goats"
 	gtesting "github.com/jlevesy/goats/pkg/testing"
-	"github.com/jlevesy/goats/pkg/vm"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestTest_Exec(t *testing.T) {
 	tests := []struct {
 		name       string
-		t          vm.Test
+		t          goats.Test
 		wantStatus gtesting.Status
 	}{
 		{
 			name: "executes all instructions",
-			t: vm.Test{
-				Instructions: []vm.Instruction{
+			t: goats.Test{
+				Instructions: []goats.Instruction{
 					reportStatus(gtesting.StatusSuccess),
 					reportStatus(gtesting.StatusSuccess),
 					reportStatus(gtesting.StatusSuccess),
@@ -28,13 +28,13 @@ func TestTest_Exec(t *testing.T) {
 		},
 		{
 			name:       "repports success by default",
-			t:          vm.Test{},
+			t:          goats.Test{},
 			wantStatus: gtesting.StatusSuccess,
 		},
 		{
 			name: "continues if failure happens",
-			t: vm.Test{
-				Instructions: []vm.Instruction{
+			t: goats.Test{
+				Instructions: []goats.Instruction{
 					reportStatus(gtesting.StatusSuccess),
 					reportStatus(gtesting.StatusFailure),
 					reportStatus(gtesting.StatusSuccess),
@@ -44,8 +44,8 @@ func TestTest_Exec(t *testing.T) {
 		},
 		{
 			name: "stops if fatal failure happens",
-			t: vm.Test{
-				Instructions: []vm.Instruction{
+			t: goats.Test{
+				Instructions: []goats.Instruction{
 					reportStatus(gtesting.StatusSuccess),
 					reportStatus(gtesting.StatusFatal),
 					reportStatus(gtesting.StatusSuccess),

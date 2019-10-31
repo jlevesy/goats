@@ -1,13 +1,13 @@
-package vm_test
+package goats_test
 
 import (
 	"context"
 
+	"github.com/jlevesy/goats/pkg/goats"
 	"github.com/jlevesy/goats/pkg/testing"
-	"github.com/jlevesy/goats/pkg/vm"
 )
 
-func reportStatus(st testing.Status) vm.InstructionFunc {
+func reportStatus(st testing.Status) goats.InstructionFunc {
 	return func(_ context.Context, t *testing.T) {
 		switch st {
 		case testing.StatusFatal:
