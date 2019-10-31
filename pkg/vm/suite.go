@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/jlevesy/goats/pkg/testing"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -18,7 +19,7 @@ func (s Suite) Exec(ctx context.Context, workers int) (*SuiteResult, error) {
 	var result SuiteResult
 
 	testInput := make(chan *Test, len(s.Tests))
-	testOutput := make(chan *TestResult, len(s.Tests))
+	testOutput := make(chan *testing.T, len(s.Tests))
 	errg, routineCtx := errgroup.WithContext(ctx)
 
 	for i := 0; i < workers; i++ {
@@ -32,12 +33,7 @@ func (s Suite) Exec(ctx context.Context, workers int) (*SuiteResult, error) {
 						return nil
 					}
 
-					tr, err := t.Exec(routineCtx)
-					if err != nil {
-						return err
-					}
-
-					testOutput <- tr
+					testOutput <- t.Exec(routineCtx)
 				}
 			}
 		})
@@ -50,7 +46,7 @@ func (s Suite) Exec(ctx context.Context, workers int) (*SuiteResult, error) {
 	close(testInput)
 
 	if err := errg.Wait(); err != nil {
-		return nil, fmt.Errorf("one or more tests reported a technical failure: %w", err)
+		return nil, fmt.Errorf("unable to execute tests: %w", err)
 	}
 
 	close(testOutput)
@@ -64,24 +60,24 @@ func (s Suite) Exec(ctx context.Context, workers int) (*SuiteResult, error) {
 
 // SuiteResult represents the result of a suite.
 type SuiteResult struct {
-	Tests []*TestResult
+	Tests []*testing.T
 }
 
 // ExecStatus return the suite status.
-func (s *SuiteResult) Status() ExecStatus {
+func (s *SuiteResult) Status() testing.Status {
 	if len(s.Tests) == 0 {
-		return ExecStatusUnkown
+		return testing.StatusUnknown
 	}
 
 	for _, tr := range s.Tests {
-		if tr.Status() == ExecStatusUnkown {
-			return ExecStatusUnkown
+		if tr.Status() == testing.StatusUnknown {
+			return testing.StatusUnknown
 		}
 
-		if tr.Status() != ExecStatusSuccess {
-			return ExecStatusFailure
+		if tr.Status() != testing.StatusSuccess {
+			return testing.StatusFailure
 		}
 	}
 
-	return ExecStatusSuccess
+	return testing.StatusSuccess
 }

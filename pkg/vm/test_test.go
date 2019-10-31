@@ -2,93 +2,63 @@ package vm_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 
+	gtesting "github.com/jlevesy/goats/pkg/testing"
 	"github.com/jlevesy/goats/pkg/vm"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestTest_Exec(t *testing.T) {
 	tests := []struct {
-		name            string
-		t               vm.Test
-		wantErr         bool
-		wantStatusesLen int
-		wantStatus      vm.ExecStatus
+		name       string
+		t          vm.Test
+		wantStatus gtesting.Status
 	}{
 		{
 			name: "executes all instructions",
 			t: vm.Test{
 				Instructions: []vm.Instruction{
-					reportStatus(vm.ExecStatusSuccess),
-					reportStatus(vm.ExecStatusSuccess),
-					reportStatus(vm.ExecStatusSuccess),
+					reportStatus(gtesting.StatusSuccess),
+					reportStatus(gtesting.StatusSuccess),
+					reportStatus(gtesting.StatusSuccess),
 				},
 			},
-			wantErr:         false,
-			wantStatusesLen: 3,
-			wantStatus:      vm.ExecStatusSuccess,
+			wantStatus: gtesting.StatusSuccess,
 		},
 		{
-			name:            "repports unknown if no insructions",
-			t:               vm.Test{},
-			wantErr:         false,
-			wantStatusesLen: 0,
-			wantStatus:      vm.ExecStatusUnkown,
+			name:       "repports success by default",
+			t:          vm.Test{},
+			wantStatus: gtesting.StatusSuccess,
 		},
 		{
 			name: "continues if failure happens",
 			t: vm.Test{
 				Instructions: []vm.Instruction{
-					reportStatus(vm.ExecStatusSuccess),
-					reportStatus(vm.ExecStatusFailure),
-					reportStatus(vm.ExecStatusSuccess),
+					reportStatus(gtesting.StatusSuccess),
+					reportStatus(gtesting.StatusFailure),
+					reportStatus(gtesting.StatusSuccess),
 				},
 			},
-			wantErr:         false,
-			wantStatusesLen: 3,
-			wantStatus:      vm.ExecStatusFailure,
+			wantStatus: gtesting.StatusFailure,
 		},
 		{
 			name: "stops if fatal failure happens",
 			t: vm.Test{
 				Instructions: []vm.Instruction{
-					reportStatus(vm.ExecStatusSuccess),
-					reportStatus(vm.ExecStatusFatal),
-					reportStatus(vm.ExecStatusSuccess),
+					reportStatus(gtesting.StatusSuccess),
+					reportStatus(gtesting.StatusFatal),
+					reportStatus(gtesting.StatusSuccess),
 				},
 			},
-			wantErr:         false,
-			wantStatusesLen: 2,
-			wantStatus:      vm.ExecStatusFatal,
-		},
-		{
-			name: "stops if instruction reports a technical error",
-			t: vm.Test{
-				Instructions: []vm.Instruction{
-					reportStatus(vm.ExecStatusSuccess),
-					reportStatus(vm.ExecStatusSuccess),
-					fail(errors.New("nope")),
-				},
-			},
-			wantErr:    true,
-			wantStatus: vm.ExecStatusFatal,
+			wantStatus: gtesting.StatusFatal,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			ctx := context.Background()
-			result, err := test.t.Exec(ctx)
-
-			if test.wantErr {
-				assert.Error(t, err)
-				return
-			}
-
-			assert.Len(t, result.Statuses, test.wantStatusesLen)
-			assert.NoError(t, err)
+			result := test.t.Exec(ctx)
 			assert.Equal(t, test.wantStatus, result.Status())
 		})
 	}

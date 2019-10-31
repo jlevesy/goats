@@ -2,9 +2,9 @@ package vm_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 
+	gtesting "github.com/jlevesy/goats/pkg/testing"
 	"github.com/jlevesy/goats/pkg/vm"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,8 +14,7 @@ func TestSuite_Exec(t *testing.T) {
 		name           string
 		suite          vm.Suite
 		workers        int
-		wantErr        bool
-		wantStatus     vm.ExecStatus
+		wantStatus     gtesting.Status
 		wantResultsLen int
 	}{
 		{
@@ -26,20 +25,20 @@ func TestSuite_Exec(t *testing.T) {
 					{
 						Name: "test-1",
 						Instructions: []vm.Instruction{
-							reportStatus(vm.ExecStatusSuccess),
-							reportStatus(vm.ExecStatusSuccess),
+							reportStatus(gtesting.StatusSuccess),
+							reportStatus(gtesting.StatusSuccess),
 						},
 					},
 					{
 						Name: "test-2",
 						Instructions: []vm.Instruction{
-							reportStatus(vm.ExecStatusSuccess),
-							reportStatus(vm.ExecStatusSuccess),
+							reportStatus(gtesting.StatusSuccess),
+							reportStatus(gtesting.StatusSuccess),
 						},
 					},
 				},
 			},
-			wantStatus:     vm.ExecStatusSuccess,
+			wantStatus:     gtesting.StatusSuccess,
 			wantResultsLen: 2,
 		},
 		{
@@ -50,20 +49,20 @@ func TestSuite_Exec(t *testing.T) {
 					{
 						Name: "test-1",
 						Instructions: []vm.Instruction{
-							reportStatus(vm.ExecStatusSuccess),
-							reportStatus(vm.ExecStatusSuccess),
+							reportStatus(gtesting.StatusSuccess),
+							reportStatus(gtesting.StatusSuccess),
 						},
 					},
 					{
 						Name: "test-2",
 						Instructions: []vm.Instruction{
-							reportStatus(vm.ExecStatusSuccess),
-							reportStatus(vm.ExecStatusSuccess),
+							reportStatus(gtesting.StatusSuccess),
+							reportStatus(gtesting.StatusSuccess),
 						},
 					},
 				},
 			},
-			wantStatus:     vm.ExecStatusUnkown,
+			wantStatus:     gtesting.StatusUnknown,
 			wantResultsLen: 0,
 		},
 		{
@@ -74,20 +73,20 @@ func TestSuite_Exec(t *testing.T) {
 					{
 						Name: "test-1",
 						Instructions: []vm.Instruction{
-							reportStatus(vm.ExecStatusSuccess),
-							reportStatus(vm.ExecStatusUnkown),
+							reportStatus(gtesting.StatusSuccess),
+							reportStatus(gtesting.StatusUnknown),
 						},
 					},
 					{
 						Name: "test-2",
 						Instructions: []vm.Instruction{
-							reportStatus(vm.ExecStatusSuccess),
-							reportStatus(vm.ExecStatusSuccess),
+							reportStatus(gtesting.StatusSuccess),
+							reportStatus(gtesting.StatusSuccess),
 						},
 					},
 				},
 			},
-			wantStatus:     vm.ExecStatusUnkown,
+			wantStatus:     gtesting.StatusUnknown,
 			wantResultsLen: 2,
 		},
 		{
@@ -98,59 +97,28 @@ func TestSuite_Exec(t *testing.T) {
 					{
 						Name: "test-1",
 						Instructions: []vm.Instruction{
-							reportStatus(vm.ExecStatusSuccess),
-							reportStatus(vm.ExecStatusFailure),
+							reportStatus(gtesting.StatusSuccess),
+							reportStatus(gtesting.StatusFailure),
 						},
 					},
 					{
 						Name: "test-2",
 						Instructions: []vm.Instruction{
-							reportStatus(vm.ExecStatusSuccess),
-							reportStatus(vm.ExecStatusSuccess),
+							reportStatus(gtesting.StatusSuccess),
+							reportStatus(gtesting.StatusSuccess),
 						},
 					},
 				},
 			},
-			wantStatus:     vm.ExecStatusFailure,
+			wantStatus:     gtesting.StatusFailure,
 			wantResultsLen: 2,
-		},
-		{
-			name:    "raise an error if a test reports an error",
-			workers: 1,
-			suite: vm.Suite{
-				Tests: []*vm.Test{
-					{
-						Name: "test-1",
-						Instructions: []vm.Instruction{
-							reportStatus(vm.ExecStatusSuccess),
-						},
-					},
-					{
-						Name: "test-2",
-						Instructions: []vm.Instruction{
-							reportStatus(vm.ExecStatusSuccess),
-							reportStatus(vm.ExecStatusSuccess),
-							fail(errors.New("nope")),
-						},
-					},
-				},
-			},
-			wantErr: true,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			ctx := context.Background()
-
-			result, err := test.suite.Exec(ctx, test.workers)
-
-			if test.wantErr {
-				assert.Error(t, err)
-				return
-			}
-
-			assert.Len(t, result.Tests, test.wantResultsLen)
+			result, _ := test.suite.Exec(ctx, test.workers)
 			assert.Equal(t, test.wantStatus, result.Status())
 		})
 	}
