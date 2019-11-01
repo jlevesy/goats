@@ -16,7 +16,7 @@ func main() {
 	}
 
 	builders := make(instruction.Builders)
-	if err := instruction.LoadDynamic([]string{"./assets/assert"}, builders); err != nil {
+	if err := instruction.LoadDynamic([]string{"./example/assert"}, builders); err != nil {
 		fmt.Printf("unable to load dynamic instructons: %v\n", err)
 		os.Exit(1)
 	}
@@ -29,7 +29,7 @@ func main() {
 	// useless, but not to forget after.
 	defer file.Close()
 
-	suite, err := text.NewParser(text.NewLexer(file)).Parse()
+	suite, err := text.NewParser(text.NewLexer(file), builders).Parse()
 	if err != nil {
 		fmt.Printf("unable to parse suite: %v\n", err)
 		os.Exit(1)

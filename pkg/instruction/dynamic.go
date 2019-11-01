@@ -20,6 +20,23 @@ type Builder func(cmd []string) (goats.Instruction, error)
 
 type Builders map[string]Builder
 
+// Resolve returns a raw cmd to a goats.Instruction
+func (b Builders) Resolve(cmd []string) (goats.Instruction, error) {
+	instructionName := cmd[0]
+
+	builder, ok := b[instructionName]
+	if !ok {
+		return NewExec(cmd), nil
+	}
+
+	inst, err := builder(cmd)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create instruction from command %q: %w", instructionName, err)
+	}
+
+	return inst, nil
+}
+
 type sourceFile struct {
 	Name    string
 	Content []byte
