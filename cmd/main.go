@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/jlevesy/goats/pkg/instruction"
 	"github.com/jlevesy/goats/pkg/text"
 )
 
@@ -14,9 +15,15 @@ func main() {
 		os.Exit(1)
 	}
 
+	builders := make(instruction.Builders)
+	if err := instruction.LoadDynamic([]string{"./assets/assert"}, builders); err != nil {
+		fmt.Printf("unable to load dynamic instructons: %v\n", err)
+		os.Exit(1)
+	}
+
 	file, err := os.Open(os.Args[1])
 	if err != nil {
-		fmt.Printf("unable to open file: %w\n", err)
+		fmt.Printf("unable to open file: %v\n", err)
 		os.Exit(1)
 	}
 	// useless, but not to forget after.
@@ -24,14 +31,14 @@ func main() {
 
 	suite, err := text.NewParser(text.NewLexer(file)).Parse()
 	if err != nil {
-		fmt.Printf("unable to parse suite: %w\n", err)
+		fmt.Printf("unable to parse suite: %v\n", err)
 		os.Exit(1)
 	}
 
 	ctx := context.Background()
 	results, err := suite.Exec(ctx, 1)
 	if err != nil {
-		fmt.Printf("unable to execute suite: %w\n", err)
+		fmt.Printf("unable to execute suite: %v\n", err)
 		os.Exit(1)
 	}
 
