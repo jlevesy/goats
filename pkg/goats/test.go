@@ -17,7 +17,7 @@ func (t *Test) Exec(ctx context.Context) *testing.T {
 	tr := testing.NewT(t.Name)
 
 	for _, inst := range t.Instructions {
-		inst.Exec(ctx, tr)
+		inst(ctx, tr)
 
 		if tr.Status() == testing.StatusFatal {
 			// Abort execution if there is a fatal error.

@@ -4,15 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/jlevesy/goats/pkg/goats"
 	"github.com/jlevesy/goats/pkg/instruction"
 	gtesting "github.com/jlevesy/goats/pkg/testing"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestExecImplements(t *testing.T) {
-	assert.Implements(t, (*goats.Instruction)(nil), &instruction.Exec{})
-}
 
 func TestExec_Exec(t *testing.T) {
 	tests := []struct {

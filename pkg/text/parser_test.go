@@ -3,33 +3,16 @@ package text_test
 import (
 	"testing"
 
-	"github.com/jlevesy/goats/pkg/goats"
-	"github.com/jlevesy/goats/pkg/instruction"
 	"github.com/jlevesy/goats/pkg/text"
 	"github.com/stretchr/testify/assert"
 )
 
-type mockScanner struct {
-	tokens []*text.Token
-}
-
-func (m *mockScanner) Next() *text.Token {
-	if len(m.tokens) == 0 {
-		return nil
-	}
-
-	var next *text.Token
-	next, m.tokens = m.tokens[0], m.tokens[1:]
-
-	return next
-}
-
 func TestParser_Parse(t *testing.T) {
 	tests := []struct {
-		name    string
-		tokens  []*text.Token
-		want    *goats.Suite
-		wantErr bool
+		name     string
+		tokens   []*text.Token
+		wantCmds [][][]string
+		wantErr  bool
 	}{
 		{
 			name: "handles test declaration",
@@ -52,15 +35,10 @@ func TestParser_Parse(t *testing.T) {
 				{Type: text.TypeCloseFunctionBody, Content: ""},
 				{Type: text.TypeEOF, Content: ""},
 			},
-			want: &goats.Suite{
-				Tests: []*goats.Test{
-					{
-						Name: "this is a random test",
-						Instructions: []goats.Instruction{
-							instruction.NewExec([]string{"ls", "/foo/bar"}),
-							instruction.NewExec([]string{"echo", "coucou"}),
-						},
-					},
+			wantCmds: [][][]string{
+				{
+					{"ls", "/foo/bar"},
+					{"echo", "coucou"},
 				},
 			},
 			wantErr: false,
@@ -70,7 +48,8 @@ func TestParser_Parse(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			sc := &mockScanner{tokens: test.tokens}
-			parser := text.NewParser(sc)
+			parser := text.NewParser(sc, mockResolver(spewerResolver))
+
 			suite, err := parser.Parse()
 			if test.wantErr {
 				assert.Error(t, err)
@@ -78,7 +57,7 @@ func TestParser_Parse(t *testing.T) {
 			}
 
 			assert.NoError(t, err)
-			assert.Equal(t, test.want, suite)
+			assert.Equal(t, test.wantCmds, instructionsFromSuite(suite))
 		})
 	}
 }

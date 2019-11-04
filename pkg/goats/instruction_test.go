@@ -7,7 +7,7 @@ import (
 	"github.com/jlevesy/goats/pkg/testing"
 )
 
-func reportStatus(st testing.Status) goats.InstructionFunc {
+func reportStatus(st testing.Status) goats.Instruction {
 	return func(_ context.Context, t *testing.T) {
 		switch st {
 		case testing.StatusFatal:

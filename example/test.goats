@@ -1,9 +1,12 @@
 # Here is an example of a goats file.
 
-@test "test true" {
+@test "example test" {
     true
     assert_ok
 
-    false
-    assert_ok
+    echo "coucou"
+
+    # We don't support quoted strings just yet, heh.
+    # Also, putting quotes over coucou makes yaegi panic \o/
+    assert_has_output coucou
 }

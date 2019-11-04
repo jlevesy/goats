@@ -1,6 +1,7 @@
 package instruction
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -16,7 +17,7 @@ import (
 	"github.com/jlevesy/goats/pkg/testing"
 )
 
-type Builder func(cmd []string) (goats.Instruction, error)
+type Builder func(cmd []string) (func(ctx context.Context, t *testing.T), error)
 
 type Builders map[string]Builder
 
@@ -26,7 +27,7 @@ func (b Builders) Resolve(cmd []string) (goats.Instruction, error) {
 
 	builder, ok := b[instructionName]
 	if !ok {
-		return NewExec(cmd), nil
+		return NewExec(cmd).Exec, nil
 	}
 
 	inst, err := builder(cmd)
@@ -44,9 +45,6 @@ type sourceFile struct {
 
 // Symbols is the goats symbols exported in Yaegi.
 var Symbols = map[string]map[string]reflect.Value{
-	"github.com/jlevesy/goats/pkg/goats": map[string]reflect.Value{
-		"Instruction": reflect.ValueOf((*goats.Instruction)(nil)),
-	},
 	"github.com/jlevesy/goats/pkg/instruction": map[string]reflect.Value{
 		"GetExecOutput": reflect.ValueOf(GetExecOutput),
 	},
@@ -103,7 +101,7 @@ func LoadDynamic(importPaths []string, builders Builders) error {
 			return fmt.Errorf("unable to eval function %q: %w", tag.BuilderName(), err)
 		}
 
-		builder, ok := v.Interface().(func([]string) (goats.Instruction, error))
+		builder, ok := v.Interface().(func([]string) (func(ctx context.Context, t *testing.T), error))
 		if !ok {
 			return fmt.Errorf("function %q is not an instruction builder", tag.BuilderName())
 		}
