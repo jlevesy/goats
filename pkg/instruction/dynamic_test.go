@@ -7,6 +7,42 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestLoadDynamic(t *testing.T) {
+	builders := make(instruction.Builders)
+	err := instruction.LoadDynamic([]string{"./assets"}, builders)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	bOK, has := builders["assert_ok"]
+	if !assert.True(t, has) {
+		return
+	}
+
+	_, err = bOK([]string{})
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	bOK2, has := builders["assert_ok_2"]
+	if !assert.True(t, has) {
+		return
+	}
+
+	_, err = bOK2([]string{})
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	fail, has := builders["fail"]
+	if !assert.True(t, has) {
+		return
+	}
+
+	_, err = fail([]string{})
+	assert.Error(t, err)
+}
+
 func TestDiscoverDynamicInstructions(t *testing.T) {
 	tests := []struct {
 		name    string
