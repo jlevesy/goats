@@ -42,11 +42,11 @@ func hasOutput(ctx context.Context, t *testing.T, expected string) {
 	}
 
 	if err = scanner.Err(); err != nil {
-		t.Fatal()
+		t.Fatal(err)
 		return
 	}
 
 	if !found {
-		t.Fail()
+		t.Failf("output %q does not contains substring %q", string(execResult.Stdout), expected)
 	}
 }

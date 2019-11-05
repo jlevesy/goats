@@ -43,6 +43,10 @@ func main() {
 	}
 
 	for _, res := range results.Tests {
-		fmt.Printf("Tests %q has status %q\n", res.Name, res.Status())
+		fmt.Printf("Tests %q has status %q\n", res.Name(), res.Status())
+
+		for _, err := range res.Errors() {
+			fmt.Println(err)
+		}
 	}
 }

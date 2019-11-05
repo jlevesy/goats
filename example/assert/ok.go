@@ -18,11 +18,11 @@ func NewOK(_ []string) (func(ctx context.Context, t *testing.T), error) {
 func OK(ctx context.Context, t *testing.T) {
 	execResult, err := instruction.GetExecOutput(t)
 	if err != nil {
-		t.Fatal()
+		t.Fatal(err)
 		return
 	}
 
 	if execResult.Err != nil {
-		t.Fail()
+		t.Failf("exit code is %d, expected 0", execResult.Err.ExitCode)
 	}
 }
