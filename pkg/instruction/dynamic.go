@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/containous/yaegi/interp"
@@ -17,8 +18,10 @@ import (
 	"github.com/jlevesy/goats/pkg/testing"
 )
 
+// Builder builds an instruction.
 type Builder func(cmd []string) (func(ctx context.Context, t *testing.T), error)
 
+// Builder is a collection of builder mapped per instruction name.
 type Builders map[string]Builder
 
 // Resolve returns a raw cmd to a goats.Instruction
@@ -38,11 +41,6 @@ func (b Builders) Resolve(cmd []string) (goats.Instruction, error) {
 	return inst, nil
 }
 
-type sourceFile struct {
-	Name    string
-	Content []byte
-}
-
 // Symbols is the goats symbols exported in Yaegi.
 var Symbols = map[string]map[string]reflect.Value{
 	"github.com/jlevesy/goats/pkg/instruction": map[string]reflect.Value{
@@ -51,6 +49,11 @@ var Symbols = map[string]map[string]reflect.Value{
 	"github.com/jlevesy/goats/pkg/testing": map[string]reflect.Value{
 		"T": reflect.ValueOf((*testing.T)(nil)),
 	},
+}
+
+type sourceFile struct {
+	Name    string
+	Content []byte
 }
 
 // LoadDynamic loads dynamic instructions from source.
@@ -63,7 +66,7 @@ func LoadDynamic(importPaths []string, builders Builders) error {
 	var sources []sourceFile
 	var tags []Tag
 
-	for file := range files {
+	for _, file := range files {
 		content, err := ioutil.ReadFile(file)
 		if err != nil {
 			return fmt.Errorf("unable to read source file %q: %w", file, err)
@@ -113,8 +116,8 @@ func LoadDynamic(importPaths []string, builders Builders) error {
 }
 
 // ListSourceFiles returns a set of all imported source files.
-func ListSourceFiles(importPaths []string) (map[string]struct{}, error) {
-	files := make(map[string]struct{})
+func ListSourceFiles(importPaths []string) ([]string, error) {
+	fileSet := make(map[string]struct{})
 
 	for _, path := range importPaths {
 		path = filepath.Clean(path)
@@ -136,9 +139,17 @@ func ListSourceFiles(importPaths []string) (map[string]struct{}, error) {
 		}
 
 		for _, file := range fs {
-			files[file] = struct{}{}
+			fileSet[file] = struct{}{}
 		}
 	}
+
+	var files []string
+
+	for file := range fileSet {
+		files = append(files, file)
+	}
+
+	sort.Strings(files)
 
 	return files, nil
 }
