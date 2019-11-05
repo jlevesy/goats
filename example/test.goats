@@ -1,6 +1,6 @@
 # Here is an example of a goats file.
 # Both "assert_ok" and "assert_has_output" are implemented in go and loaded dynamically from the "./example/assert"
-# directory. You can check out their implmentations !
+# directory. Go check their implementations !
 
 @test "example test" {
     true

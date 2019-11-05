@@ -90,7 +90,6 @@ func LoadDynamic(importPaths []string, builders Builders) error {
 	for _, source := range sources {
 		if _, err = i.Eval(string(source.Content)); err != nil {
 			return fmt.Errorf("unable to parse %q: %w", source.Name, err)
-
 		}
 	}
 
