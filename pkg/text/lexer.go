@@ -16,7 +16,6 @@ const (
 	TypeWord
 	TypeLineComment
 	TypeTestDeclaration
-	TypeDoubleQuote
 
 	TypeOpenFunctionBody  // {
 	TypeCloseFunctionBody // }
@@ -35,8 +34,6 @@ func (t TokenType) String() string {
 		return "line-comment"
 	case TypeTestDeclaration:
 		return "test-declaration"
-	case TypeDoubleQuote:
-		return "double-quote"
 	case TypeOpenFunctionBody:
 		return "open-function-body"
 	case TypeCloseFunctionBody:
@@ -122,6 +119,15 @@ func (l *Lexer) errorf(pattern string, args ...interface{}) {
 }
 
 func (l *Lexer) readWord() (string, error) {
+	r, err := l.peekRune()
+	if err != nil {
+		return "", err
+	}
+
+	if r == doubleQuoteRune {
+		return l.readQuotedString()
+	}
+
 	var word []rune
 	for {
 		r, _, err := l.content.ReadRune()
@@ -140,6 +146,30 @@ func (l *Lexer) readWord() (string, error) {
 			return string(word), nil
 		}
 	}
+}
+
+func (l *Lexer) readQuotedString() (string, error) {
+	var str []rune
+
+	// Consume the first double quote
+	if _, _, err := l.content.ReadRune(); err != nil {
+		return "", err
+	}
+
+	for {
+		r, _, err := l.content.ReadRune()
+		if err != nil {
+			return "", err
+		}
+
+		if r == doubleQuoteRune {
+			break
+		}
+
+		str = append(str, r)
+	}
+
+	return string(str), nil
 }
 
 func (l *Lexer) advance(skippedRunes []rune) error {
@@ -257,64 +287,15 @@ func scanFunctionDeclaration(l *Lexer) lexerState {
 		return nil
 	}
 
-	return scanFunctionName
-}
-
-func scanFunctionName(l *Lexer) lexerState {
-	if err := l.advance(whitespaces); err != nil {
+	word, err := l.readWord()
+	if err != nil {
 		l.errorf("unable to scan function declaration: %w", err)
 		return nil
 	}
 
-	openQuote, _, err := l.content.ReadRune()
-	if err != nil {
-		l.errorf("unable to scan function: %w", err)
-		return nil
-	}
+	l.emitToken(TypeWord, word)
 
-	if openQuote != doubleQuoteRune {
-		l.errorf("unexpected rune %q, expected %q", openQuote, doubleQuoteRune)
-		return nil
-	}
-
-	l.emitToken(TypeDoubleQuote, "")
-
-	// Read all the words for function name body.
-	for {
-		if err := l.advance(whitespaces); err != nil {
-			l.errorf("unable to scan function declaration: %w", err)
-			return nil
-		}
-
-		word, err := l.readWord()
-		if err != nil {
-			l.errorf("unable to scan function declaration: %w", err)
-			return nil
-		}
-
-		l.emitToken(TypeWord, word)
-
-		next, err := l.peekRune()
-		if err != nil {
-			l.errorf("unable to scan function declaration: %w", err)
-			return nil
-		}
-
-		if next != doubleQuoteRune {
-			continue
-		}
-
-		// Consuming the closing double quote.
-		_, _, err = l.content.ReadRune()
-		if err != nil {
-			l.errorf("unable to scan function declaration: %w", err)
-			return nil
-		}
-
-		l.emitToken(TypeDoubleQuote, "")
-
-		return scanFunctionBody
-	}
+	return scanFunctionBody
 }
 
 func scanFunctionBody(l *Lexer) lexerState {

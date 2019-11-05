@@ -16,4 +16,4 @@ At the moment it is able to run a set of commands on the system and capture thei
 
 With go modules enabled
 
-`go run cmd/main.go assets/test.goats`
+`go run cmd/main.go example/test.goats`

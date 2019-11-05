@@ -3,11 +3,14 @@ package text
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/jlevesy/goats/pkg/goats"
-	"github.com/jlevesy/goats/pkg/instruction"
 )
+
+// Resolver builds an Instruction from a commands.
+type Resolver interface {
+	Resolve(cmd []string) (goats.Instruction, error)
+}
 
 // Scanner scans for token.
 type Scanner interface {
@@ -18,19 +21,21 @@ type parserState func(*Parser) (parserState, error)
 
 // Parser transforms lexer tokens into an actual goats TestSuite.
 type Parser struct {
-	lexer Scanner
-	state parserState
+	lexer    Scanner
+	resolver Resolver
+	state    parserState
 
 	suite  *goats.Suite
 	testID int32
 }
 
-func NewParser(l Scanner) *Parser {
+func NewParser(l Scanner, r Resolver) *Parser {
 	return &Parser{
-		lexer:  l,
-		state:  parseSuite,
-		suite:  &goats.Suite{},
-		testID: -1, // This is not good !
+		lexer:    l,
+		resolver: r,
+		state:    parseSuite,
+		suite:    &goats.Suite{},
+		testID:   -1, // This is not good !
 	}
 }
 
@@ -108,31 +113,12 @@ func parseSuite(p *Parser) (parserState, error) {
 }
 
 func parseTestName(p *Parser) (parserState, error) {
-	// Consume the first double quote.
-	tok, err := p.requireNextTokenWithType(TypeDoubleQuote)
+	tok, err := p.requireNextTokenWithType(TypeWord)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse test name: %w", err)
 	}
 
-	var words []string
-
-	for {
-		tok, err = p.requireNextTokenWithType(TypeWord, TypeDoubleQuote)
-		if err != nil {
-			return nil, fmt.Errorf("unable to parse test name: %w", err)
-		}
-
-		if tok.Type == TypeDoubleQuote {
-			break
-		}
-
-		words = append(words, tok.Content)
-	}
-
-	t := goats.Test{
-		Name: strings.Join(words, string(spaceRune)),
-	}
-
+	t := goats.Test{Name: tok.Content}
 	p.suite.Tests = append(p.suite.Tests, &t)
 	p.testID++
 
@@ -159,8 +145,12 @@ func parseTestBody(p *Parser) (parserState, error) {
 		case TypeWord:
 			currentInstruction = append(currentInstruction, tok.Content)
 		case TypeEOL:
-			// TODO => resolve instruction here
-			instructions = append(instructions, instruction.NewExec(currentInstruction))
+			inst, err := p.resolver.Resolve(currentInstruction)
+			if err != nil {
+				return nil, fmt.Errorf("unable to resolve instruction %w", err)
+			}
+
+			instructions = append(instructions, inst)
 			currentInstruction = nil
 		case TypeCloseFunctionBody:
 			p.suite.Tests[p.testID].Instructions = instructions

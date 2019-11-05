@@ -55,7 +55,7 @@ type ExecOutput struct {
 func GetExecOutput(t *testing.T) (*ExecOutput, error) {
 	v := t.GetOutput(execOutputStoreKey)
 	if v == nil {
-		return nil, nil
+		return nil, errors.New("no registered ExecOutput")
 	}
 
 	out, ok := v.(*ExecOutput)
