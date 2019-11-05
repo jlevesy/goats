@@ -4,9 +4,7 @@
     true
     assert_ok
 
-    echo "coucou"
+    echo "hello world"
 
-    # We don't support quoted strings just yet, heh.
-    # Also, putting quotes over coucou makes yaegi panic \o/
-    assert_has_output coucou
+    assert_has_output "hello world"
 }

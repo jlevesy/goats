@@ -9,22 +9,17 @@ import (
 
 func TestParser_Parse(t *testing.T) {
 	tests := []struct {
-		name     string
-		tokens   []*text.Token
-		wantCmds [][][]string
-		wantErr  bool
+		name          string
+		tokens        []*text.Token
+		wantTestNames []string
+		wantCmds      [][][]string
+		wantErr       bool
 	}{
 		{
 			name: "handles test declaration",
 			tokens: []*text.Token{
 				{Type: text.TypeTestDeclaration, Content: ""},
-				{Type: text.TypeDoubleQuote, Content: ""},
-				{Type: text.TypeWord, Content: "this"},
-				{Type: text.TypeWord, Content: "is"},
-				{Type: text.TypeWord, Content: "a"},
-				{Type: text.TypeWord, Content: "random"},
-				{Type: text.TypeWord, Content: "test"},
-				{Type: text.TypeDoubleQuote, Content: ""},
+				{Type: text.TypeWord, Content: "this is a random test"},
 				{Type: text.TypeOpenFunctionBody, Content: ""},
 				{Type: text.TypeWord, Content: "ls"},
 				{Type: text.TypeWord, Content: "/foo/bar"},
@@ -34,6 +29,9 @@ func TestParser_Parse(t *testing.T) {
 				{Type: text.TypeEOL, Content: ""},
 				{Type: text.TypeCloseFunctionBody, Content: ""},
 				{Type: text.TypeEOF, Content: ""},
+			},
+			wantTestNames: []string{
+				"this is a random test",
 			},
 			wantCmds: [][][]string{
 				{
@@ -56,8 +54,12 @@ func TestParser_Parse(t *testing.T) {
 				return
 			}
 
-			assert.NoError(t, err)
+			if !assert.NoError(t, err) {
+				return
+			}
+
 			assert.Equal(t, test.wantCmds, instructionsFromSuite(suite))
+			assert.Equal(t, test.wantTestNames, testNamesFromSuite(suite))
 		})
 	}
 }

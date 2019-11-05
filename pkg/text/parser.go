@@ -3,7 +3,6 @@ package text
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/jlevesy/goats/pkg/goats"
 )
@@ -114,31 +113,12 @@ func parseSuite(p *Parser) (parserState, error) {
 }
 
 func parseTestName(p *Parser) (parserState, error) {
-	// Consume the first double quote.
-	tok, err := p.requireNextTokenWithType(TypeDoubleQuote)
+	tok, err := p.requireNextTokenWithType(TypeWord)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse test name: %w", err)
 	}
 
-	var words []string
-
-	for {
-		tok, err = p.requireNextTokenWithType(TypeWord, TypeDoubleQuote)
-		if err != nil {
-			return nil, fmt.Errorf("unable to parse test name: %w", err)
-		}
-
-		if tok.Type == TypeDoubleQuote {
-			break
-		}
-
-		words = append(words, tok.Content)
-	}
-
-	t := goats.Test{
-		Name: strings.Join(words, string(spaceRune)),
-	}
-
+	t := goats.Test{Name: tok.Content}
 	p.suite.Tests = append(p.suite.Tests, &t)
 	p.testID++
 
