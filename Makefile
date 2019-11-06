@@ -13,7 +13,7 @@ dry_release: clean
 
 .PHONY: install
 install:
-	mv $(DIST_DIR)/sind $(GOPATH)/bin/sind
+	mv $(DIST_DIR)/goats $(GOPATH)/bin/goats
 
 #
 # Test targets
@@ -40,7 +40,7 @@ build: clean $(DIST_DIR) binary
 
 .PHONY: binary
 binary:
-	CGO_ENABLED=0 go build -ldflags='-s -w' -o $(DIST_DIR)/goats ./cmd/goats
+	CGO_ENABLED=0 go build -ldflags='-s -w' -o $(DIST_DIR)/goats ./cmd
 
 $(DIST_DIR):
 	mkdir -p $(DIST_DIR)
