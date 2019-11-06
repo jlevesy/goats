@@ -1,0 +1,71 @@
+---
+version: 2
+jobs:
+  install:
+    working_directory: ~/goats
+    docker:
+      - image: circleci/golang:1.13
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
+      - run: make download
+      - save_cache:
+          key: go-mod-v1-{{ checksum "go.sum" }}
+          paths:
+            - "/go/pkg/mod"
+
+  unit_test:
+    docker:
+      - image: circleci/golang:1.13
+    working_directory: ~/goats
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
+      - run:
+          name: "Install golangci-lint"
+          command: |
+            curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s v1.21.0
+            sudo mv ./bin/golangci-lint $GOPATH/bin
+            rm -rf ./bin
+            golangci-lint --version
+      - run: make lint
+      - run: make unit_test
+      - run: make binary
+
+  release:
+    docker:
+      - image: circleci/golang:1.13
+    working_directory: ~/goats
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
+      - run: curl -sL https://git.io/goreleaser | bash
+
+workflows:
+  version: 2
+  main:
+    jobs:
+      - install:
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*(-.*)*/
+      - unit_test:
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*(-.*)*/
+          requires:
+            - install
+      - release:
+          requires:
+            - unit_test
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*(-.*)*/

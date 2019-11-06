@@ -73,6 +73,7 @@ func (p *Parser) requireNextToken() (*Token, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	if tok == nil {
 		return nil, errors.New("received nil token")
 	}
@@ -126,7 +127,7 @@ func parseTestName(p *Parser) (parserState, error) {
 }
 
 func parseTestBody(p *Parser) (parserState, error) {
-	tok, err := p.requireNextTokenWithType(TypeOpenFunctionBody)
+	_, err := p.requireNextTokenWithType(TypeOpenFunctionBody)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse test body: %w", err)
 	}
@@ -135,8 +136,9 @@ func parseTestBody(p *Parser) (parserState, error) {
 		instructions       []goats.Instruction
 		currentInstruction []string
 	)
+
 	for {
-		tok, err = p.requireNextTokenWithType(TypeWord, TypeEOL, TypeCloseFunctionBody)
+		tok, err := p.requireNextTokenWithType(TypeWord, TypeEOL, TypeCloseFunctionBody)
 		if err != nil {
 			return nil, fmt.Errorf("unable to parse test body: %w", err)
 		}

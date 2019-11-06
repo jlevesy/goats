@@ -31,6 +31,7 @@ func (e Exec) Exec(ctx context.Context, t *testing.T) {
 		t.StoreOutput(execOutputStoreKey, &ExecOutput{Stdout: stdout.Bytes(), Err: exit})
 		return
 	}
+
 	if err != nil {
 		t.Fatal()
 		return

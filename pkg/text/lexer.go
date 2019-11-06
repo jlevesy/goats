@@ -129,6 +129,7 @@ func (l *Lexer) readWord() (string, error) {
 	}
 
 	var word []rune
+
 	for {
 		r, _, err := l.content.ReadRune()
 		if err != nil {
@@ -244,14 +245,15 @@ func scanText(l *Lexer) lexerState {
 			l.emitToken(TypeEOF, "")
 			return nil
 		}
+
 		if err != nil {
-			l.errorf("unable to scan file: %w", err)
+			l.errorf("unable to scan file: %v", err)
 			return nil
 		}
 
 		r, _, err := l.content.ReadRune()
 		if err != nil {
-			l.errorf("unable to scan file: %w", err)
+			l.errorf("unable to scan file: %v", err)
 			return nil
 		}
 
@@ -263,33 +265,31 @@ func scanText(l *Lexer) lexerState {
 			return nil
 		}
 	}
-
-	return nil
 }
 
 func scanFunctionDeclaration(l *Lexer) lexerState {
 	rawFuncType, err := l.readWord()
 	if err != nil {
-		l.errorf("unable to scan function: %w", err)
+		l.errorf("unable to scan function: %v", err)
 		return nil
 	}
 
 	funcType, err := functionType(rawFuncType)
 	if err != nil {
-		l.errorf("unable to scan function: %w", err)
+		l.errorf("unable to scan function: %v", err)
 		return nil
 	}
 
 	l.emitToken(funcType, "")
 
 	if err = l.advance(whitespaces); err != nil {
-		l.errorf("unable to scan function declaration: %w", err)
+		l.errorf("unable to scan function declaration: %v", err)
 		return nil
 	}
 
 	word, err := l.readWord()
 	if err != nil {
-		l.errorf("unable to scan function declaration: %w", err)
+		l.errorf("unable to scan function declaration: %v", err)
 		return nil
 	}
 
@@ -300,13 +300,13 @@ func scanFunctionDeclaration(l *Lexer) lexerState {
 
 func scanFunctionBody(l *Lexer) lexerState {
 	if err := l.advance(whitespaces); err != nil {
-		l.errorf("unable to scan function declaration: %w", err)
+		l.errorf("unable to scan function declaration: %v", err)
 		return nil
 	}
 
 	openBlock, _, err := l.content.ReadRune()
 	if err != nil {
-		l.errorf("unable to scan function: %w", err)
+		l.errorf("unable to scan function: %v", err)
 		return nil
 	}
 
@@ -322,27 +322,27 @@ func scanFunctionBody(l *Lexer) lexerState {
 
 func scanInstruction(l *Lexer) lexerState {
 	if err := l.advance(whitespacesAndComments); err != nil {
-		l.errorf("unable to scan instruction: %w", err)
+		l.errorf("unable to scan instruction: %v", err)
 		return nil
 	}
 
 	for {
 		word, err := l.readWord()
 		if err != nil {
-			l.errorf("unable to scan instruction: %w", err)
+			l.errorf("unable to scan instruction: %v", err)
 			return nil
 		}
 
 		l.emitToken(TypeWord, word)
 
 		if err = l.advance(tabsSpacesCommentsEscape); err != nil {
-			l.errorf("unable to scan instruction: %w", err)
+			l.errorf("unable to scan instruction: %v", err)
 			return nil
 		}
 
 		next, err := l.peekRune()
 		if err != nil {
-			l.errorf("unable to scan instruction: %w", err)
+			l.errorf("unable to scan instruction: %v", err)
 			return nil
 		}
 
@@ -356,13 +356,13 @@ func scanInstruction(l *Lexer) lexerState {
 	l.emitToken(TypeEOL, "")
 
 	if err := l.advance(whitespaces); err != nil {
-		l.errorf("unable to scan instruction: %w", err)
+		l.errorf("unable to scan instruction: %v", err)
 		return nil
 	}
 
 	next, err := l.peekRune()
 	if err != nil {
-		l.errorf("unable to scan instruction: %w", err)
+		l.errorf("unable to scan instruction: %v", err)
 		return nil
 	}
 
@@ -373,7 +373,7 @@ func scanInstruction(l *Lexer) lexerState {
 	// consuming the closing bracket
 	_, _, err = l.content.ReadRune()
 	if err != nil {
-		l.errorf("unable to scan instruction: %w", err)
+		l.errorf("unable to scan instruction: %v", err)
 		return nil
 	}
 
