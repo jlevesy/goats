@@ -16,8 +16,9 @@ func main() {
 	}
 
 	builders := make(instruction.Builders)
+
 	if err := instruction.LoadDynamic([]string{"./example/assert"}, builders); err != nil {
-		fmt.Printf("unable to load dynamic instructons: %v\n", err)
+		fmt.Printf("unable to load dynamic instructions: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -36,6 +37,7 @@ func main() {
 	}
 
 	ctx := context.Background()
+
 	results, err := suite.Exec(ctx, 1)
 	if err != nil {
 		fmt.Printf("unable to execute suite: %v\n", err)

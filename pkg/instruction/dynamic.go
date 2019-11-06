@@ -21,7 +21,7 @@ import (
 // Builder builds an instruction.
 type Builder func(cmd []string) (func(ctx context.Context, t *testing.T), error)
 
-// Builder is a collection of builder mapped per instruction name.
+// Builders is a collection of builder mapped per instruction name.
 type Builders map[string]Builder
 
 // Resolve returns a raw cmd to a goats.Instruction
@@ -43,10 +43,10 @@ func (b Builders) Resolve(cmd []string) (goats.Instruction, error) {
 
 // Symbols is the goats symbols exported in Yaegi.
 var Symbols = map[string]map[string]reflect.Value{
-	"github.com/jlevesy/goats/pkg/instruction": map[string]reflect.Value{
+	"github.com/jlevesy/goats/pkg/instruction": {
 		"GetExecOutput": reflect.ValueOf(GetExecOutput),
 	},
-	"github.com/jlevesy/goats/pkg/testing": map[string]reflect.Value{
+	"github.com/jlevesy/goats/pkg/testing": {
 		"T": reflect.ValueOf((*testing.T)(nil)),
 	},
 }
@@ -63,8 +63,10 @@ func LoadDynamic(importPaths []string, builders Builders) error {
 		return fmt.Errorf("unable to list source files: %w", err)
 	}
 
-	var sources []sourceFile
-	var tags []Tag
+	var (
+		sources []sourceFile
+		tags    []Tag
+	)
 
 	for _, file := range files {
 		content, err := ioutil.ReadFile(file)
@@ -120,15 +122,18 @@ func ListSourceFiles(importPaths []string) ([]string, error) {
 
 	for _, path := range importPaths {
 		path = filepath.Clean(path)
+
 		stat, err := os.Stat(path)
 		if err != nil {
 			return nil, fmt.Errorf("unable to stat import path: %w", err)
 		}
+
 		if !stat.IsDir() {
 			return nil, fmt.Errorf("invalid import path %q: must be an existing directory", path)
 		}
+
 		if !strings.HasSuffix(path, string(filepath.Separator)) {
-			path = path + string(filepath.Separator)
+			path += string(filepath.Separator)
 		}
 
 		// TODO handle recursive discovery ?

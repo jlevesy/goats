@@ -23,6 +23,6 @@ func OK(ctx context.Context, t *testing.T) {
 	}
 
 	if execResult.Err != nil {
-		t.Failf("exit code is %d, expected 0", execResult.Err.ExitCode)
+		t.Failf("exit code is %d, expected 0", execResult.Err.ExitCode())
 	}
 }

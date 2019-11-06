@@ -37,7 +37,7 @@ func hasOutput(ctx context.Context, t *testing.T, expected string) {
 	for scanner.Scan() {
 		if strings.Contains(scanner.Text(), expected) {
 			found = true
-			return
+			break
 		}
 	}
 
